@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+:root {
+  --sidebar-bg: #0f172a;
+  --sidebar-hover: #1e293b;
+  --sidebar-active: #1e3a5f;
+  --sidebar-text: #94a3b8;
+  --sidebar-text-bright: #f1f5f9;
+  --sidebar-border: rgba(255,255,255,0.06);
+
+  --main-bg: #ffffff;
+
+  --blue-primary: #185FA5;
+  --blue-hover: #0C447C;
+  --blue-light: #E6F1FB;
+
+  --bubble-user-bg: #185FA5;
+  --bubble-user-text: #ffffff;
+  --bubble-ai-bg: #f8fafc;
+  --bubble-ai-border: #e2e8f0;
+
+  --input-bg: #ffffff;
+  --input-border: #e2e8f0;
+  --input-focus: #185FA5;
+  --input-shadow: 0 2px 12px rgba(0,0,0,0.08);
+
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  /* Legacy aliases used by prose/code */
+  --navakha-blue: #185FA5;
+  --navakha-blue-dark: #0C447C;
+  --navakha-blue-pale: #E6F1FB;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--main-bg);
+  color: var(--text-primary);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+
+/* ── Logo gradient shared by logo mark and avatars ── */
+.logo-gradient {
+  background: linear-gradient(135deg, #185FA5 0%, #1D9E75 100%);
+}
+
+/* ── Input card — the bordered container around the textarea ── */
+.input-card {
+  background: var(--input-bg);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--input-shadow);
+  display: flex;
+  align-items: flex-end;
+  padding: 12px 14px;
+  gap: 8px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-card:focus-within {
+  border-color: var(--input-focus);
+  box-shadow: 0 0 0 3px rgba(24,95,165,0.1), var(--input-shadow);
+}
+
+/* ── Message bubble shapes ── */
+.bubble-user {
+  border-radius: 18px 18px 4px 18px;
+  background: var(--bubble-user-bg);
+  color: var(--bubble-user-text);
+  padding: 10px 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-words;
+}
+.bubble-ai {
+  border-radius: 4px 18px 18px 18px;
+  background: var(--bubble-ai-bg);
+  border: 1px solid var(--bubble-ai-border);
+  padding: 14px 18px;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ── Suggestion chips ── */
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  font-family: var(--sans);
+}
+.chip:hover {
+  background: var(--blue-light);
+  border-color: var(--blue-primary);
+  color: var(--blue-primary);
+}
+.chip:active {
+  transform: scale(0.97);
+}
+
+/* ── Typing indicator dots ── */
+.typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  display: inline-block;
+  animation: typingBounce 1.2s infinite;
+  margin: 0 2px;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+/* ── Message appear animation ── */
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.message-enter {
+  animation: msgIn 0.2s ease-out forwards;
+}
+
+/* ── Fade-in (for reply bar, scroll button, etc.) ── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.15s ease forwards; }
+
+/* ── Slide-down (for reply thread panel) ── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── Streaming cursor blink ── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.streaming-cursor::after {
+  content: '▋';
+  animation: blink 1s step-start infinite;
+  color: var(--blue-primary);
+  margin-left: 1px;
+}
+
+/* ── Prose / Markdown content styles ── */
+.prose { line-height: 1.7; color: var(--text-primary); }
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  font-weight: 600;
+  color: #0f172a;
+  margin: 1em 0 0.5em;
+}
+.prose h1 { font-size: 1.5em; }
+.prose h2 { font-size: 1.25em; }
+.prose h3 { font-size: 1.1em; }
+.prose p { margin: 0.6em 0; }
+.prose ul, .prose ol { padding-left: 1.5em; margin: 0.6em 0; }
+.prose li { margin: 0.25em 0; }
+.prose strong { font-weight: 600; color: #0f172a; }
+.prose em { font-style: italic; }
+.prose blockquote {
+  border-left: 3px solid var(--blue-primary);
+  padding-left: 1em;
+  color: #475569;
+  margin: 0.75em 0;
+}
+.prose code {
+  font-family: var(--mono);
+  font-size: 0.875em;
+  background: #f1f5f9;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  color: #0f172a;
+}
+.prose pre { margin: 0; }
+.prose table { border-collapse: collapse; width: 100%; margin: 0.75em 0; }
+.prose th, .prose td { border: 1px solid #e2e8f0; padding: 0.5em 0.75em; text-align: left; }
+.prose th { background: #f8fafc; font-weight: 600; }
+.prose a { color: var(--blue-primary); text-decoration: underline; }
+.prose hr { border: none; border-top: 1px solid #e2e8f0; margin: 1em 0; }
+
+/* ── DOCX / XLSX visual render ── */
+.docx-render { font-family: var(--sans); font-size: 15px; line-height: 1.75; color: var(--text-primary); }
+.docx-render table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+.docx-render td, .docx-render th { border: 1px solid #d1d5db; padding: 8px 12px; text-align: left; }
+.docx-render th { background: #f3f4f6; font-weight: 600; }
+.docx-render h1 { font-size: 1.875rem; font-weight: 700; margin: 1.5rem 0 0.5rem; color: var(--text-primary); }
+.docx-render h2 { font-size: 1.5rem; font-weight: 600; margin: 1.25rem 0 0.5rem; color: var(--text-primary); }
+.docx-render h3 { font-size: 1.25rem; font-weight: 600; margin: 1rem 0 0.5rem; color: var(--text-primary); }
+.docx-render p { margin: 0.6em 0; }
+.docx-render ul, .docx-render ol { padding-left: 1.5em; margin: 0.6em 0; }
+.docx-render li { margin: 0.25em 0; }
+.docx-render strong { font-weight: 600; }
+.docx-render a { color: var(--blue-primary); text-decoration: underline; }
+.xlsx-sheet-name { font-size: 13px; font-weight: 600; color: var(--text-secondary); margin: 16px 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+.xlsx-divider { border-top: 2px solid var(--input-border); margin: 24px 0; }
+
+/* ── Mermaid / Chart containers ── */
+.mermaid-container svg { max-width: 100%; height: auto; }
+.chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; }
+
+/* ── Inline reply thread indent ── */
+.thread-indent {
+  border-left: 2px solid var(--blue-light);
+  margin-left: 12px;
+  padding-left: 12px;
+}
+
+/* ── Mobile: reply buttons always visible ── */
+@media (max-width: 767px) {
+  .block-reply-btn { opacity: 1 !important; pointer-events: auto !important; }
+  .chat-textarea { min-height: 48px !important; }
+}
+
+/* ── Mobile sidebar: slide over ── */
+@media (max-width: 768px) {
+  .sidebar-mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .sidebar-mobile.open {
+    transform: translateX(0);
+  }
+}
+
+/* ── Chip grid on small screens ── */
+@media (max-width: 480px) {
+  .chip-wrap {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .chip { justify-content: center; }
+}
+
+/* ── Button press micro-interaction ── */
+button { transition: all 0.15s ease; }
+button:active:not(:disabled) { transform: scale(0.97); }

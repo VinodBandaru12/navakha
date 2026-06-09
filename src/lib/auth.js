@@ -1,22 +1,20 @@
 import { supabase } from './supabase'
 
-export async function signInWithOtp(email) {
-  const { error } = await supabase.auth.signInWithOtp({
+export async function signUp(email, password, firstName, lastName) {
+  const { data, error } = await supabase.auth.signUp({
     email,
-    options: { shouldCreateUser: true }
-  })
-  if (error) throw error
-}
-
-export async function verifyOtp(email, token) {
-  const { data, error } = await supabase.auth.verifyOtp({
-    email,
-    token,
-    type: 'email'
+    password,
+    options: {
+      data: { name: `${firstName} ${lastName}`.trim() },
+    },
   })
   if (error) throw error
 
-  // Create profile if it doesn't exist (replaces the DB trigger)
+  if (data?.user && !data.session) {
+    // Email confirmation required
+    return { needsConfirmation: true, user: data.user }
+  }
+
   if (data?.user) {
     const { data: existing } = await supabase
       .from('profiles')
@@ -27,11 +25,17 @@ export async function verifyOtp(email, token) {
       await supabase.from('profiles').insert({
         id: data.user.id,
         email: data.user.email,
-        name: data.user.email.split('@')[0],
+        name: `${firstName} ${lastName}`.trim(),
       })
     }
   }
 
+  return { needsConfirmation: false, user: data?.user }
+}
+
+export async function signIn(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) throw error
   return data
 }
 

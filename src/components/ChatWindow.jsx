@@ -109,6 +109,7 @@ export default function ChatWindow({
 
   const scrollContainerRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const inputAreaRef = useRef(null);
   const initialFired = useRef(false);
   const prevMsgCountRef = useRef(0);
 
@@ -157,6 +158,7 @@ export default function ChatWindow({
     setInputValue('');
     setIsAtBottom(true);
     setShowNewMsg(false);
+    inputAreaRef.current?.focus();
     await sendMessage(t);
   };
 
@@ -259,6 +261,7 @@ export default function ChatWindow({
 
       {/* ── Input area ── */}
       <InputArea
+        ref={inputAreaRef}
         value={inputValue}
         onChange={setInputValue}
         onSend={() => handleSend()}

@@ -36,7 +36,6 @@ export default function UserMenu() {
 
   const menuItems = [
     { label: 'Account', modal: 'account' },
-    { label: 'Preferences', modal: 'preferences' },
     { label: 'Usage', modal: 'usage' },
     { label: 'Subscription', modal: 'subscription' },
   ]

@@ -1,8 +1,12 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { ArrowUp, Square, Lock } from 'lucide-react';
 
-export default function InputArea({ value, onChange, onSend, onCancel, streaming, disabled }) {
+const InputArea = forwardRef(function InputArea({ value, onChange, onSend, onCancel, streaming, disabled }, ref) {
   const textareaRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => textareaRef.current?.focus(),
+  }));
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -29,11 +33,7 @@ export default function InputArea({ value, onChange, onSend, onCancel, streaming
         flexShrink: 0,
       }}
     >
-      {/* Inner card */}
-      <div
-        className="input-card"
-        style={{ maxWidth: 800, margin: '0 auto' }}
-      >
+      <div className="input-card" style={{ maxWidth: 800, margin: '0 auto' }}>
         <textarea
           ref={textareaRef}
           value={value}
@@ -44,16 +44,9 @@ export default function InputArea({ value, onChange, onSend, onCancel, streaming
           rows={1}
           className="chat-textarea"
           style={{
-            flex: 1,
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            fontSize: 15,
-            color: 'var(--text-primary)',
-            background: 'transparent',
-            minHeight: 24,
-            maxHeight: 160,
-            lineHeight: 1.6,
+            flex: 1, border: 'none', outline: 'none', resize: 'none',
+            fontSize: 15, color: 'var(--text-primary)', background: 'transparent',
+            minHeight: 24, maxHeight: 160, lineHeight: 1.6,
             fontFamily: 'var(--sans)',
             cursor: disabled ? 'not-allowed' : 'text',
           }}
@@ -64,19 +57,11 @@ export default function InputArea({ value, onChange, onSend, onCancel, streaming
             onClick={onCancel}
             title="Stop generating"
             style={{
-              width: 36,
-              height: 36,
-              minWidth: 36,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
-              background: '#fee2e2',
-              color: '#dc2626',
-              cursor: 'pointer',
-              alignSelf: 'flex-end',
-              flexShrink: 0,
+              width: 36, height: 36, minWidth: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--radius-full)', border: 'none',
+              background: '#fee2e2', color: '#dc2626',
+              cursor: 'pointer', alignSelf: 'flex-end', flexShrink: 0,
             }}
             onMouseOver={(e) => e.currentTarget.style.background = '#fecaca'}
             onMouseOut={(e) => e.currentTarget.style.background = '#fee2e2'}
@@ -89,43 +74,27 @@ export default function InputArea({ value, onChange, onSend, onCancel, streaming
             disabled={sendDisabled}
             title="Send (Enter)"
             style={{
-              width: 36,
-              height: 36,
-              minWidth: 36,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: 'var(--radius-full)',
-              border: 'none',
+              width: 36, height: 36, minWidth: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 'var(--radius-full)', border: 'none',
               background: sendDisabled ? 'var(--input-border)' : 'var(--blue-primary)',
               color: 'white',
               cursor: sendDisabled ? 'not-allowed' : 'pointer',
-              alignSelf: 'flex-end',
-              flexShrink: 0,
+              alignSelf: 'flex-end', flexShrink: 0,
               transition: 'all 0.15s ease',
             }}
-            onMouseOver={(e) => {
-              if (!sendDisabled) e.currentTarget.style.background = 'var(--blue-hover)';
-            }}
-            onMouseOut={(e) => {
-              if (!sendDisabled) e.currentTarget.style.background = 'var(--blue-primary)';
-            }}
+            onMouseOver={(e) => { if (!sendDisabled) e.currentTarget.style.background = 'var(--blue-hover)'; }}
+            onMouseOut={(e) => { if (!sendDisabled) e.currentTarget.style.background = 'var(--blue-primary)'; }}
           >
             <ArrowUp size={16} strokeWidth={2.5} />
           </button>
         )}
       </div>
 
-      {/* Privacy badge */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 4,
-          marginTop: 8,
-          fontSize: 11,
-          color: 'var(--text-muted)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 4, marginTop: 8, fontSize: 11, color: 'var(--text-muted)',
         }}
       >
         <Lock size={10} />
@@ -133,4 +102,6 @@ export default function InputArea({ value, onChange, onSend, onCancel, streaming
       </div>
     </div>
   );
-}
+});
+
+export default InputArea;

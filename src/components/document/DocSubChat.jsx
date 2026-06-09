@@ -81,6 +81,7 @@ export default function DocSubChat({ documentId, blocks }) {
     if (!q || loading) return;
     setInput('');
     setError(null);
+    inputRef.current?.focus();
 
     const userMsg = { role: 'user', content: q };
     const next = [...messages, userMsg];
@@ -99,6 +100,7 @@ export default function DocSubChat({ documentId, blocks }) {
       setError(e.message);
     } finally {
       setLoading(false);
+      inputRef.current?.focus();
     }
   };
 

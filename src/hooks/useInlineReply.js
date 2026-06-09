@@ -8,7 +8,7 @@ import { useStreaming } from './useStreaming';
  * Messages are kept in local state only — they don't appear in the main chat feed.
  * The API receives the truncated DB history + all local card messages for context.
  */
-export function useInlineReply({ conversationId, provider, apiKey, truncateAfterMessageId }) {
+export function useInlineReply({ conversationId, provider, apiKey, accessToken, truncateAfterMessageId }) {
   const [cardMessages, setCardMessages] = useState([]);
   const [streaming, setStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
@@ -16,7 +16,7 @@ export function useInlineReply({ conversationId, provider, apiKey, truncateAfter
   const { stream, cancel } = useStreaming();
 
   const send = useCallback(async (text) => {
-    if (!text.trim() || !apiKey || !conversationId) return;
+    if (!text.trim() || (!apiKey && !accessToken) || !conversationId) return;
     setError(null);
 
     const userMsg = { id: Date.now(), role: 'user', content: text.trim() };
@@ -38,6 +38,7 @@ export function useInlineReply({ conversationId, provider, apiKey, truncateAfter
       fullText = await stream({
         provider,
         apiKey,
+        accessToken,
         messages: buildApiMessages(apiHistory),
         onDelta: (delta) => {
           fullText += delta;
@@ -54,7 +55,7 @@ export function useInlineReply({ conversationId, provider, apiKey, truncateAfter
     if (fullText) {
       setCardMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', content: fullText }]);
     }
-  }, [conversationId, provider, apiKey, truncateAfterMessageId, cardMessages, stream]);
+  }, [conversationId, provider, apiKey, accessToken, truncateAfterMessageId, cardMessages, stream]);
 
   const cancelStream = useCallback(() => {
     cancel();

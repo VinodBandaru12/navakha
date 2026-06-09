@@ -191,6 +191,7 @@ export default function ChatWindow({
                 conversationId={conversationId}
                 provider={provider}
                 apiKey={apiKey}
+                accessToken={accessToken}
                 isLatestMessage={msg.id === messages[messages.length - 1].id}
               />
             ))}

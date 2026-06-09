@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowUp, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -95,7 +95,6 @@ export default function DocSubChat({ documentId, blocks }) {
         { accessToken: session?.access_token, provider: profile?.default_provider || 'anthropic' }
       );
       setMessages(prev => [...prev, { role: 'assistant', content: text }]);
-      setCollapsed(false);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -121,26 +120,37 @@ export default function DocSubChat({ documentId, blocks }) {
       flexShrink: 0,
     }}>
 
+      {/* Sticky bar shown whenever there's content — collapse/expand controls */}
+      {hasContent && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '4px 16px', borderBottom: showPanel ? '1px solid var(--input-border)' : 'none',
+          flexShrink: 0, background: 'white',
+        }}>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            {messages.length} message{messages.length !== 1 ? 's' : ''}
+          </span>
+          <button
+            onClick={() => setCollapsed(v => !v)}
+            title={collapsed ? 'Expand chat' : 'Collapse chat'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '3px 10px', fontSize: 12,
+              color: collapsed ? 'var(--blue-primary)' : 'var(--text-secondary)',
+              border: `1px solid ${collapsed ? '#bfdbfe' : 'var(--input-border)'}`,
+              borderRadius: 20,
+              background: collapsed ? '#eff6ff' : 'white',
+              cursor: 'pointer', fontFamily: 'var(--sans)',
+            }}
+          >
+            {collapsed ? <ChevronsUp size={13} /> : <ChevronsDown size={13} />}
+          </button>
+        </div>
+      )}
+
       {/* Messages area — only when there's content and not collapsed */}
       {showPanel && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px', position: 'relative' }}>
-          {/* Collapse button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8, maxWidth: 760, margin: '0 auto 8px' }}>
-            <button
-              onClick={() => setCollapsed(true)}
-              title="Collapse chat"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '3px 10px', fontSize: 12, color: 'var(--text-secondary)',
-                border: '1px solid var(--input-border)', borderRadius: 20,
-                background: 'white', cursor: 'pointer', fontFamily: 'var(--sans)',
-              }}
-            >
-              <ChevronDown size={13} />
-              Collapse
-            </button>
-          </div>
-
           <div style={{
             maxWidth: 760, margin: '0 auto',
             display: 'flex', flexDirection: 'column', gap: 12,
@@ -179,25 +189,6 @@ export default function DocSubChat({ documentId, blocks }) {
         flexShrink: 0,
       }}>
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-
-        {/* Re-expand button when collapsed */}
-        {collapsed && hasContent && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <button
-              onClick={() => setCollapsed(false)}
-              title="Expand chat"
-              style={{
-                display: 'flex', alignItems: 'center', gap: 4,
-                padding: '3px 10px', fontSize: 12, color: 'var(--blue-primary)',
-                border: '1px solid #bfdbfe', borderRadius: 20,
-                background: '#eff6ff', cursor: 'pointer', fontFamily: 'var(--sans)',
-              }}
-            >
-              <ChevronUp size={13} />
-              {messages.length} message{messages.length !== 1 ? 's' : ''}
-            </button>
-          </div>
-        )}
 
         <div className="input-card">
           <textarea

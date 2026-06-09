@@ -181,14 +181,14 @@ function InputRow({ text, setText, onSend, onClose, streaming, cancel, isExpande
 
 // ── Reply thread (inline + overlay) ────────────────────────────────────────
 
-function ReplyThread({ messageId, conversationId, provider, apiKey, blockContent, onClose }) {
+function ReplyThread({ messageId, conversationId, provider, apiKey, accessToken, blockContent, onClose }) {
   const [text, setText] = useState('');
   const [expanded, setExpanded] = useState(false);
   const inlineEndRef = useRef(null);
   const overlayEndRef = useRef(null);
 
   const { send, cancel, streaming, streamingContent, cardMessages, error } = useInlineReply({
-    conversationId, provider, apiKey,
+    conversationId, provider, apiKey, accessToken,
     truncateAfterMessageId: messageId,
   });
 
@@ -350,7 +350,7 @@ function ReplyThread({ messageId, conversationId, provider, apiKey, blockContent
 
 // ── Main export ─────────────────────────────────────────────────────────────
 
-export default function MessageBlock({ block, blockIndex, isLastBlock, totalBlocks, isLatestMessage, messageId, conversationId, provider, apiKey }) {
+export default function MessageBlock({ block, blockIndex, isLastBlock, totalBlocks, isLatestMessage, messageId, conversationId, provider, apiKey, accessToken }) {
   const [cardOpen, setCardOpen] = useState(false);
 
   const shouldShowReply =
@@ -406,6 +406,7 @@ export default function MessageBlock({ block, blockIndex, isLastBlock, totalBloc
           conversationId={conversationId}
           provider={provider}
           apiKey={apiKey}
+          accessToken={accessToken}
           blockContent={block.content}
           onClose={() => setCardOpen(false)}
         />

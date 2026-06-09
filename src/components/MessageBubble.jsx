@@ -97,7 +97,7 @@ function UserBubble({ message }) {
 
 // ── AI bubble ──────────────────────────────────────────────────────────────
 
-function AIBubble({ message, conversationId, provider, apiKey, isLatestMessage }) {
+function AIBubble({ message, conversationId, provider, apiKey, accessToken, isLatestMessage }) {
   const blocks = parseIntoBlocks(message.content);
 
   return (
@@ -127,6 +127,7 @@ function AIBubble({ message, conversationId, provider, apiKey, isLatestMessage }
               conversationId={conversationId}
               provider={provider}
               apiKey={apiKey}
+              accessToken={accessToken}
             />
           ))}
         </div>
@@ -184,7 +185,7 @@ function ErrorBubble({ error }) {
 
 export default function MessageBubble({
   message, streaming, streamingContent, error,
-  conversationId, provider, apiKey, isLatestMessage,
+  conversationId, provider, apiKey, accessToken, isLatestMessage,
 }) {
   if (streaming && message === null) return <StreamingBubble content={streamingContent} />;
   if (error && message === null) return <ErrorBubble error={error} />;
@@ -192,7 +193,7 @@ export default function MessageBubble({
   if (message.role === 'user') return <UserBubble message={message} />;
   if (message.role === 'assistant') {
     if (!message.content) return null;
-    return <AIBubble message={message} conversationId={conversationId} provider={provider} apiKey={apiKey} isLatestMessage={isLatestMessage} />;
+    return <AIBubble message={message} conversationId={conversationId} provider={provider} apiKey={apiKey} accessToken={accessToken} isLatestMessage={isLatestMessage} />;
   }
   return null;
 }

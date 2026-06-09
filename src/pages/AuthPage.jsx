@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { signIn, sendSignupOtp, verifySignupCode } from '../lib/auth'
+import { signIn, sendSignupOtp, resetPassword, updatePassword } from '../lib/auth'
 import { useAuth } from '../context/AuthContext'
 import NavakhaLogo from '../components/NavakhaLogo'
 
@@ -170,40 +170,6 @@ function PolicyModal({ title, onClose, content }) {
   )
 }
 
-// ── OTP boxes ─────────────────────────────────────────────────────────────────
-
-function OtpBoxes({ otp, onChange, onKeyDown, onPaste, refs, loading }) {
-  return (
-    <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
-      {otp.map((digit, i) => (
-        <input
-          key={i}
-          ref={(el) => (refs.current[i] = el)}
-          type="text"
-          inputMode="numeric"
-          maxLength={1}
-          value={digit}
-          onChange={(e) => onChange(i, e.target.value)}
-          onKeyDown={(e) => onKeyDown(i, e)}
-          onPaste={i === 0 ? onPaste : undefined}
-          disabled={loading}
-          style={{
-            width: 48, height: 56, textAlign: 'center',
-            fontSize: 22, fontWeight: 600,
-            background: 'rgba(255,255,255,0.05)',
-            border: `1.5px solid ${digit ? TEAL : BORDER}`,
-            borderRadius: 10, color: TEXT, outline: 'none',
-            cursor: loading ? 'not-allowed' : 'text',
-            opacity: loading ? 0.6 : 1, fontFamily: 'inherit',
-            transition: 'border-color 0.15s',
-          }}
-          onFocus={(e) => { if (!loading) e.target.style.borderColor = TEAL }}
-          onBlur={(e) => { if (!digit) e.target.style.borderColor = BORDER }}
-        />
-      ))}
-    </div>
-  )
-}
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
@@ -225,9 +191,7 @@ export default function AuthPage() {
   const [loginPassword, setLoginPassword] = useState('')
 
   // OTP
-  const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [resendCountdown, setResendCountdown] = useState(0)
-  const otpRefs = useRef([])
 
   // UI state
   const [loading, setLoading] = useState(false)
@@ -235,15 +199,24 @@ export default function AuthPage() {
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
 
+  // Forgot password
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
+
+  // New password (recovery mode)
+  const [newPassword, setNewPassword] = useState('')
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
+
   const navigate = useNavigate()
-  const { session, profile } = useAuth()
+  const { session, profile, isPasswordRecovery } = useAuth()
 
   useEffect(() => {
+    if (isPasswordRecovery) return // stay on page to let user set new password
     if (session) {
       if (profile && !profile.onboarded) navigate('/onboarding', { replace: true })
       else navigate('/app', { replace: true })
     }
-  }, [session, profile, navigate])
+  }, [session, profile, isPasswordRecovery, navigate])
 
   // Resend countdown
   useEffect(() => {
@@ -280,72 +253,19 @@ export default function AuthPage() {
     setLoading(true)
     setError('')
     try {
+      localStorage.setItem('navakha_pending_signup', JSON.stringify({
+        email: signupEmail.trim(),
+        password,
+        name: `${firstName.trim()} ${lastName.trim()}`,
+      }))
       await sendSignupOtp(signupEmail.trim())
       setStep('otp')
       setResendCountdown(30)
-      setTimeout(() => otpRefs.current[0]?.focus(), 100)
     } catch (err) {
       setError(err.message || 'Failed to send code. Please try again.')
     } finally {
       setLoading(false)
     }
-  }
-
-  // ── Signup step 2: verify OTP ────────────────────────────────────────────────
-
-  const submitOtp = useCallback(async (digits) => {
-    const code = digits.join('')
-    if (code.length !== 6) return
-    setLoading(true)
-    setError('')
-    try {
-      await verifySignupCode(
-        signupEmail.trim(),
-        code,
-        password,
-        `${firstName.trim()} ${lastName.trim()}`
-      )
-      // session fires → AuthContext redirects automatically
-    } catch (err) {
-      setError('Invalid code. Please try again.')
-      setOtp(['', '', '', '', '', ''])
-      setTimeout(() => otpRefs.current[0]?.focus(), 50)
-    } finally {
-      setLoading(false)
-    }
-  }, [signupEmail, password, firstName, lastName])
-
-  const handleOtpChange = (index, value) => {
-    if (!/^\d*$/.test(value)) return
-    const digit = value.slice(-1)
-    const next = [...otp]
-    next[index] = digit
-    setOtp(next)
-    if (digit && index < 5) otpRefs.current[index + 1]?.focus()
-    if (next.every(d => d !== '')) submitOtp(next)
-  }
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace') {
-      if (otp[index]) {
-        const next = [...otp]; next[index] = ''; setOtp(next)
-      } else if (index > 0) {
-        otpRefs.current[index - 1]?.focus()
-        const next = [...otp]; next[index - 1] = ''; setOtp(next)
-      }
-    } else if (e.key === 'ArrowLeft' && index > 0) otpRefs.current[index - 1]?.focus()
-    else if (e.key === 'ArrowRight' && index < 5) otpRefs.current[index + 1]?.focus()
-  }
-
-  const handleOtpPaste = (e) => {
-    e.preventDefault()
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-    if (!pasted) return
-    const next = [...otp]
-    for (let i = 0; i < 6; i++) next[i] = pasted[i] || ''
-    setOtp(next)
-    otpRefs.current[Math.min(pasted.length, 5)]?.focus()
-    if (pasted.length === 6) submitOtp(next)
   }
 
   const handleResendOtp = async () => {
@@ -354,8 +274,6 @@ export default function AuthPage() {
     try {
       await sendSignupOtp(signupEmail.trim())
       setResendCountdown(30)
-      setOtp(['', '', '', '', '', ''])
-      setTimeout(() => otpRefs.current[0]?.focus(), 50)
     } catch (err) {
       setError('Failed to resend. Please try again.')
     } finally {
@@ -382,7 +300,35 @@ export default function AuthPage() {
     }
   }
 
-  const switchMode = (m) => { setMode(m); setStep('form'); setError(''); setOtp(['', '', '', '', '', '']) }
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    if (!forgotEmail.trim() || loading) return
+    setLoading(true); setError('')
+    try {
+      await resetPassword(forgotEmail.trim())
+      setForgotSent(true)
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault()
+    if (!newPassword || newPassword !== newPasswordConfirm || loading) return
+    setLoading(true); setError('')
+    try {
+      await updatePassword(newPassword)
+      navigate('/app', { replace: true })
+    } catch (err) {
+      setError(err.message || 'Failed to update password. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const switchMode = (m) => { setMode(m); setStep('form'); setError(''); setForgotSent(false); localStorage.removeItem('navakha_pending_signup') }
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -405,11 +351,64 @@ export default function AuthPage() {
           </div>
         </div>
 
-        {/* ── OTP verification screen (signup step 2) ── */}
-        {mode === 'signup' && step === 'otp' ? (
+        {/* ── PASSWORD RECOVERY (arrived via reset email link) ── */}
+        {isPasswordRecovery ? (
+          <div>
+            <h1 style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Set new password</h1>
+            <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.6 }}>Choose a strong password for your account.</p>
+            <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <PasswordInput value={newPassword} onChange={setNewPassword} placeholder="New password (min. 8 characters)" autoFocus required />
+              <PasswordInput value={newPasswordConfirm} onChange={setNewPasswordConfirm} placeholder="Confirm new password" required />
+              {(newPassword.length > 0 || newPasswordConfirm.length > 0) && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 5, padding: '4px 2px' }}>
+                  <ValidationRow ok={newPassword.length >= 8} text="At least 8 characters" />
+                  {newPasswordConfirm.length > 0 && <ValidationRow ok={newPassword === newPasswordConfirm} text="Passwords match" />}
+                </div>
+              )}
+              {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center', margin: 0 }}>{error}</p>}
+              <BtnPrimary disabled={!newPassword || newPassword.length < 8 || newPassword !== newPasswordConfirm || loading}>
+                {loading ? <Spinner /> : 'Update password'}
+              </BtnPrimary>
+            </form>
+          </div>
+        ) : mode === 'forgot' ? (
+          /* ── FORGOT PASSWORD ── */
           <div>
             <button
-              onClick={() => { setStep('form'); setError(''); setOtp(['', '', '', '', '', '']) }}
+              onClick={() => switchMode('login')}
+              style={{ background: 'none', border: 'none', color: MUTED, cursor: 'pointer', padding: '4px 0', display: 'flex', alignItems: 'center', gap: 6, fontSize: 14, marginBottom: 24, fontFamily: 'inherit' }}
+            >
+              ← Back to login
+            </button>
+            {forgotSent ? (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>📧</div>
+                <h1 style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Check your email</h1>
+                <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, marginBottom: 24 }}>
+                  We sent a password reset link to <span style={{ color: TEXT }}>{forgotEmail}</span>. Click the link in the email to set a new password.
+                </p>
+                <BtnPrimary type="button" onClick={() => switchMode('login')}>Back to login</BtnPrimary>
+              </div>
+            ) : (
+              <>
+                <h1 style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Reset password</h1>
+                <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.6 }}>Enter your email and we'll send you a reset link.</p>
+                <form onSubmit={handleForgotPassword} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <TextInput type="email" value={forgotEmail} onChange={setForgotEmail} placeholder="Email address" autoFocus required />
+                  {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center', margin: 0 }}>{error}</p>}
+                  <BtnPrimary disabled={!forgotEmail.trim() || loading}>
+                    {loading ? <Spinner /> : 'Send reset link'}
+                  </BtnPrimary>
+                </form>
+              </>
+            )}
+          </div>
+        ) : (
+        /* ── Activation link sent screen (signup step 2) ── */
+        mode === 'signup' && step === 'otp' ? (
+          <div>
+            <button
+              onClick={() => { setStep('form'); setError(''); localStorage.removeItem('navakha_pending_signup') }}
               style={{
                 background: 'none', border: 'none', color: MUTED,
                 cursor: 'pointer', padding: '4px 0', display: 'flex',
@@ -418,43 +417,33 @@ export default function AuthPage() {
             >
               ← Back
             </button>
-            <h1 style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Check your email</h1>
-            <p style={{ fontSize: 14, color: MUTED, marginBottom: 24, lineHeight: 1.6 }}>
-              We sent a 6-digit code to <span style={{ color: TEXT }}>{signupEmail}</span>
-            </p>
-
-            <OtpBoxes
-              otp={otp}
-              onChange={handleOtpChange}
-              onKeyDown={handleOtpKeyDown}
-              onPaste={handleOtpPaste}
-              refs={otpRefs}
-              loading={loading}
-            />
-
-            {loading && (
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-                <Spinner />
-              </div>
-            )}
-
-            {error && (
-              <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center', marginTop: 12 }}>{error}</p>
-            )}
-
-            <p style={{ fontSize: 13, color: MUTED, textAlign: 'center', marginTop: 16 }}>
-              {resendCountdown > 0 ? (
-                <span>Resend in <span style={{ color: TEXT }}>{resendCountdown}s</span></span>
-              ) : (
-                <button
-                  onClick={handleResendOtp}
-                  disabled={loading}
-                  style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', textDecoration: 'underline' }}
-                >
-                  Resend code
-                </button>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>📧</div>
+              <h1 style={{ fontSize: 20, fontWeight: 600, color: TEXT, marginBottom: 8 }}>Check your email</h1>
+              <p style={{ fontSize: 14, color: MUTED, marginBottom: 8, lineHeight: 1.6 }}>
+                We sent an activation link to
+              </p>
+              <p style={{ fontSize: 14, color: TEXT, marginBottom: 24, fontWeight: 500 }}>{signupEmail}</p>
+              <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.6, marginBottom: 24 }}>
+                Click the link in the email to activate your account. The link expires in 1 hour.
+              </p>
+              {error && (
+                <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center', marginBottom: 12 }}>{error}</p>
               )}
-            </p>
+              <p style={{ fontSize: 13, color: MUTED }}>
+                {resendCountdown > 0 ? (
+                  <span>Resend in <span style={{ color: TEXT }}>{resendCountdown}s</span></span>
+                ) : (
+                  <button
+                    onClick={handleResendOtp}
+                    disabled={loading}
+                    style={{ background: 'none', border: 'none', color: TEAL, cursor: 'pointer', fontSize: 13, fontFamily: 'inherit', textDecoration: 'underline' }}
+                  >
+                    {loading ? 'Sending...' : 'Resend activation link'}
+                  </button>
+                )}
+              </p>
+            </div>
           </div>
         ) : (
           <>
@@ -492,6 +481,11 @@ export default function AuthPage() {
                   value={loginPassword} onChange={setLoginPassword}
                   placeholder="Password" required
                 />
+                <div style={{ textAlign: 'right', marginTop: -6 }}>
+                  <span onClick={() => switchMode('forgot')} style={{ fontSize: 13, color: TEAL, cursor: 'pointer', textDecoration: 'underline' }}>
+                    Forgot password?
+                  </span>
+                </div>
                 {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center', margin: 0 }}>{error}</p>}
                 <BtnPrimary disabled={!loginEmail.trim() || !loginPassword || loading}>
                   {loading ? <Spinner /> : 'Log in'}
@@ -561,6 +555,7 @@ export default function AuthPage() {
               </form>
             )}
           </>
+        )
         )}
       </div>
 

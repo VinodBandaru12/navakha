@@ -19,12 +19,11 @@ export async function verifySignupCode(email, token, password, name) {
   if (error) throw error
 
   if (data?.user) {
-    // Set password so they can log in with it next time
     if (password) {
-      await supabase.auth.updateUser({ password })
+      const { error: pwError } = await supabase.auth.updateUser({ password })
+      if (pwError) throw pwError
     }
 
-    // Create profile row if not already there
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -42,6 +41,18 @@ export async function verifySignupCode(email, token, password, name) {
   }
 
   return data
+}
+
+export async function resetPassword(email) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/auth?mode=reset`,
+  })
+  if (error) throw error
+}
+
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword })
+  if (error) throw error
 }
 
 export async function signIn(email, password) {

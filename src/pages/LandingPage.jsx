@@ -75,27 +75,48 @@ function BrainIcon() {
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
 function Navbar({ onLogin, onGetStarted }) {
+  const [narrow, setNarrow] = useState(false)
+  useEffect(() => {
+    const check = () => setNarrow(window.innerWidth < 500)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 100,
       background: BG, borderBottom: `1px solid ${BORDER}`,
-      padding: '0 clamp(16px, 4vw, 48px)', height: 64,
+      padding: '0 clamp(12px, 4vw, 48px)', height: 56,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      gap: 8,
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <NavakhaLogo size={32} />
-        <span style={{ fontSize: 18, fontWeight: 600, color: TEXT }}>Navakha</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        <NavakhaLogo size={28} />
+        {!narrow && <span style={{ fontSize: 17, fontWeight: 600, color: TEXT }}>Navakha</span>}
       </div>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button onClick={onLogin} style={{ padding: '8px 20px', background: 'none', border: `1px solid rgba(255,255,255,0.3)`, borderRadius: 8, color: TEXT, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+        <button onClick={onLogin} style={{
+          padding: narrow ? '7px 12px' : '7px 18px',
+          background: 'none', border: `1px solid rgba(255,255,255,0.3)`,
+          borderRadius: 8, color: TEXT,
+          fontSize: narrow ? 13 : 14, fontWeight: 500,
+          cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+          whiteSpace: 'nowrap',
+        }}
           onMouseOver={(e) => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL }}
           onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = TEXT }}>
           Log in
         </button>
-        <button onClick={onGetStarted} style={{ padding: '8px 20px', background: TEAL, border: 'none', borderRadius: 8, color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+        <button onClick={onGetStarted} style={{
+          padding: narrow ? '7px 12px' : '7px 18px',
+          background: TEAL, border: 'none', borderRadius: 8, color: 'white',
+          fontSize: narrow ? 13 : 14, fontWeight: 600,
+          cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s',
+          whiteSpace: 'nowrap',
+        }}
           onMouseOver={(e) => e.currentTarget.style.background = '#0C447C'}
           onMouseOut={(e) => e.currentTarget.style.background = TEAL}>
-          Get started free
+          {narrow ? 'Sign up' : 'Get started free'}
         </button>
       </div>
     </nav>
@@ -104,7 +125,7 @@ function Navbar({ onLogin, onGetStarted }) {
 
 function Section({ children, alt = false, id, style = {}, wide = false }) {
   return (
-    <section id={id} style={{ background: alt ? SECTION_BG_ALT : BG, padding: '80px clamp(16px, 4vw, 48px)', ...style }}>
+    <section id={id} style={{ background: alt ? SECTION_BG_ALT : BG, padding: 'clamp(40px,5vw,64px) clamp(16px,4vw,48px)', ...style }}>
       <div style={{ maxWidth: wide ? 1200 : 1100, margin: '0 auto' }}>{children}</div>
     </section>
   )
@@ -121,20 +142,20 @@ function SectionHeading({ title, sub }) {
 
 function FeatureCard({ Icon, title, body }) {
   return (
-    <div style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '28px 24px', flex: 1 }}>
-      <div style={{ marginBottom: 16 }}><Icon /></div>
-      <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 10 }}>{title}</h3>
-      <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65 }}>{body}</p>
+    <div style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12, padding: '20px 18px', minWidth: 0 }}>
+      <div style={{ marginBottom: 10 }}><Icon /></div>
+      <h3 style={{ fontSize: 'clamp(14px, 1.8vw, 16px)', fontWeight: 600, color: TEXT, marginBottom: 8 }}>{title}</h3>
+      <p style={{ fontSize: 'clamp(12px, 1.3vw, 14px)', color: MUTED, lineHeight: 1.6, margin: 0 }}>{body}</p>
     </div>
   )
 }
 
 function Step({ number, title, body }) {
   return (
-    <div style={{ flex: 1, textAlign: 'center', padding: '0 16px' }}>
+    <div style={{ flex: '1 1 200px', textAlign: 'center', padding: '0 16px', marginBottom: 24 }}>
       <div style={{ fontSize: 36, fontWeight: 700, color: TEAL, marginBottom: 12 }}>{number}</div>
-      <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 10 }}>{title}</h3>
-      <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65 }}>{body}</p>
+      <h3 style={{ fontSize: 'clamp(15px, 2vw, 18px)', fontWeight: 600, color: TEXT, marginBottom: 10 }}>{title}</h3>
+      <p style={{ fontSize: 'clamp(13px, 1.5vw, 15px)', color: MUTED, lineHeight: 1.65 }}>{body}</p>
     </div>
   )
 }
@@ -166,48 +187,61 @@ function PricingCard({ plan, price, features, ctaLabel, highlighted = false, onC
 
 // ── Mini app sidebar ──────────────────────────────────────────────────────────
 
-function MiniSidebar({ mode = 'chat', activeIdx = 0 }) {
-  const chatItems = ['Machine Learning Basics', 'Neural Networks', 'Python Arrays', 'Sorting Algorithms']
+function MiniSidebar({ mode = 'chat', activeIdx = 0, hidden = false }) {
+  if (hidden) return null
+  const chatItems = [
+    'New Chat', 'AI Message Processing', 'Feed Forward Network Ex...',
+    'Simple Greeting Exchange', 'Feed Forward Network Explanation',
+    'Interactive Pandas Learning UI', 'NumPy Array Operations',
+    'DNA Basics Explained Simply', 'Greeting Claude Introduction',
+  ]
   return (
-    <div style={{ width: 158, background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0, fontSize: 11, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
-      <div style={{ padding: '10px 12px 6px', display: 'flex', alignItems: 'center', gap: 7 }}>
+    <div style={{ width: 172, background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', flexShrink: 0, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ padding: '10px 12px 8px', display: 'flex', alignItems: 'center', gap: 7 }}>
         <div style={{ width: 22, height: 22, borderRadius: 6, background: 'linear-gradient(135deg,#185FA5,#1D9E75)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0 }}>N</div>
-        <span style={{ fontWeight: 600, color: '#f1f5f9', fontSize: 12 }}>Navakha</span>
-      </div>
-      <div style={{ padding: '0 8px 6px', display: 'flex', gap: 3 }}>
-        {[{id:'chat',label:'AI Chat'},{id:'docs',label:'Docs'}].map(t => (
-          <div key={t.id} style={{ flex: 1, padding: '4px 0', textAlign: 'center', background: mode === t.id ? 'rgba(255,255,255,0.1)' : 'none', borderRadius: 5, color: mode === t.id ? '#f1f5f9' : '#475569', cursor: 'default' }}>{t.label}</div>
-        ))}
-      </div>
-      <div style={{ padding: '0 8px 6px' }}>
-        <div style={{ padding: '5px 8px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-          ✎ New chat
-        </div>
+        <span style={{ fontWeight: 600, color: '#f1f5f9', fontSize: 12, flex: 1 }}>Navakha</span>
+        <span style={{ color: '#475569', fontSize: 12 }}>‹</span>
       </div>
       {mode === 'chat' ? (
-        <div style={{ flex: 1, padding: '2px 8px', overflow: 'hidden' }}>
-          <div style={{ fontSize: 10, color: '#475569', padding: '3px 7px', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.05em' }}>TODAY</div>
-          {chatItems.map((item, i) => (
-            <div key={i} style={{ padding: '5px 7px', borderRadius: 5, background: i === activeIdx ? 'rgba(255,255,255,0.09)' : 'none', color: i === activeIdx ? '#f1f5f9' : '#64748b', marginBottom: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {item}
+        <>
+          <div style={{ padding: '0 8px 5px' }}>
+            <div style={{ padding: '5px 8px', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: '#94a3b8', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
+              <span style={{ fontSize: 12 }}>✎</span> New chat
             </div>
-          ))}
-        </div>
+          </div>
+          <div style={{ padding: '0 8px 6px' }}>
+            <div style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 6, color: '#475569', fontSize: 10, display: 'flex', alignItems: 'center', gap: 4 }}>
+              🔍 Search chats
+            </div>
+          </div>
+          <div style={{ flex: 1, padding: '0 8px', overflow: 'hidden' }}>
+            <div style={{ fontSize: 9, color: '#334155', padding: '2px 5px 3px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>YESTERDAY</div>
+            {chatItems.map((item, i) => (
+              <div key={i} style={{ padding: '4px 6px', borderRadius: 5, background: i === activeIdx ? 'rgba(24,95,165,0.22)' : 'none', color: i === activeIdx ? '#93c5fd' : '#64748b', marginBottom: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 10.5 }}>
+                {item}
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <div style={{ flex: 1, padding: '0 8px' }}>
-          <div style={{ border: '1.5px dashed rgba(255,255,255,0.15)', borderRadius: 7, padding: '10px 8px', textAlign: 'center', marginBottom: 8, cursor: 'default' }}>
-            <div style={{ fontSize: 16, color: '#475569', marginBottom: 2 }}>↑</div>
-            <div style={{ color: '#475569', fontSize: 10 }}>Upload document</div>
-            <div style={{ color: '#334155', fontSize: 9, marginTop: 2 }}>PDF, DOCX, TXT...</div>
+          <div style={{ border: '1.5px dashed rgba(255,255,255,0.15)', borderRadius: 7, padding: '10px 8px', textAlign: 'center', marginBottom: 8 }}>
+            <div style={{ fontSize: 18, color: '#475569', marginBottom: 2 }}>↑</div>
+            <div style={{ color: '#e2e8f0', fontSize: 11, fontWeight: 600 }}>Upload document</div>
+            <div style={{ color: '#475569', fontSize: 9, marginTop: 2 }}>PDF, DOCX, TXT, MD, code...</div>
           </div>
-          <div style={{ padding: '5px 7px', background: 'rgba(255,255,255,0.09)', borderRadius: 5, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', overflow: 'hidden' }}>
-            <span>📄</span><span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>Intro_to_Python.pdf</span>
+          <div style={{ padding: '5px 7px', background: 'rgba(255,255,255,0.09)', borderRadius: 5, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 5, fontSize: 10 }}>
+            <span style={{ flexShrink: 0 }}>📄</span>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>House_Building_Plan.p...</span>
           </div>
         </div>
       )}
       <div style={{ padding: '7px 8px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 7 }}>
-        <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg,#185FA5,#1D9E75)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0 }}>A</div>
-        <span style={{ color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Student · Free plan</span>
+        <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', flexShrink: 0 }}>?</div>
+        <div style={{ overflow: 'hidden' }}>
+          <div style={{ color: '#e2e8f0', fontSize: 10.5, fontWeight: 500 }}>User</div>
+          <div style={{ color: '#475569', fontSize: 9 }}>Free plan</div>
+        </div>
       </div>
     </div>
   )
@@ -243,9 +277,20 @@ function TextBlock({ children }) {
   return <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0 14px 14px 14px', padding: '11px 13px', fontSize: 13, color: '#1e293b', lineHeight: 1.7 }}>{children}</div>
 }
 
-function ReplyBtn({ label, onClick, pulse }) {
+function ReplyBtn({ label, onClick, pulse, highlighted }) {
   return (
-    <button onClick={onClick} style={{ padding: '4px 11px', background: pulse ? 'rgba(24,95,165,0.1)' : 'rgba(24,95,165,0.06)', border: `1px solid ${pulse ? TEAL : 'rgba(24,95,165,0.22)'}`, borderRadius: 20, color: TEAL, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', animation: pulse ? 'replyPulse 2s ease-in-out infinite' : 'none' }}>
+    <button onClick={onClick} style={{
+      padding: '5px 13px',
+      background: highlighted ? TEAL : pulse ? 'rgba(24,95,165,0.12)' : 'rgba(24,95,165,0.06)',
+      border: `1.5px solid ${highlighted || pulse ? TEAL : 'rgba(24,95,165,0.25)'}`,
+      borderRadius: 20,
+      color: highlighted ? 'white' : TEAL,
+      fontSize: 11, fontWeight: highlighted ? 600 : 500,
+      cursor: 'pointer', fontFamily: 'inherit',
+      animation: pulse && !highlighted ? 'replyPulse 2s ease-in-out infinite' : 'none',
+      boxShadow: pulse && !highlighted ? '0 0 0 0 rgba(24,95,165,0.4)' : 'none',
+      transition: 'all 0.15s',
+    }}>
       ↩ {label}
     </button>
   )
@@ -292,34 +337,53 @@ function SectionLabel({ text, icon = '↩ reply' }) {
 // ── Chart widget ──────────────────────────────────────────────────────────────
 
 function BarChart() {
-  const bars = [
-    { label: 'Addition', py: 82, np: 3, pyLabel: '82ms', npLabel: '3ms' },
-    { label: 'Multiply', py: 100, np: 8, pyLabel: '1.2s', npLabel: '8ms' },
-    { label: 'Math Funcs', py: 65, np: 5, pyLabel: '650ms', npLabel: '5ms' },
-    { label: 'Memory', py: 95, np: 28, pyLabel: '950MB', npLabel: '280MB' },
+  const data = [
+    { label: 'Addition\n(1M numbers)', py: 2, np: 0.2 },
+    { label: 'Matrix\nMultiplication', py: 43, np: 1 },
+    { label: 'Mathematical\nFunctions', py: 8, np: 0.5 },
+    { label: 'Memory\nUsage', py: 100, np: 25 },
   ]
+  const maxVal = 100
+  const chartH = 110, chartW = 300, padL = 28, padB = 34, padT = 18, padR = 8
+  const innerH = chartH - padT - padB
+  const innerW = chartW - padL - padR
+  const ticks = [0, 20, 40, 60, 80, 100]
   return (
-    <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: '14px 16px', background: 'white' }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#1e293b', marginBottom: 10, textAlign: 'center' }}>Pure Python vs NumPy — Performance</div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 10, fontSize: 11, color: MUTED }}>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#f87171', borderRadius: 2, marginRight: 4 }} />Pure Python</span>
-        <span><span style={{ display: 'inline-block', width: 10, height: 10, background: TEAL, borderRadius: 2, marginRight: 4 }} />NumPy</span>
+    <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', background: 'white' }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: '#1e293b', marginBottom: 6, textAlign: 'center' }}>NumPy vs Pure Python Performance</div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 14, marginBottom: 6, fontSize: 10.5, color: '#64748b' }}>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#f87171', borderRadius: 2, marginRight: 4 }} />Pure Python (seconds)</span>
+        <span><span style={{ display: 'inline-block', width: 10, height: 10, background: '#1e3a5f', borderRadius: 2, marginRight: 4 }} />NumPy (seconds)</span>
       </div>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', height: 80 }}>
-        {bars.map(b => (
-          <div key={b.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-            <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 68 }}>
-              <div style={{ width: 14, background: '#f87171', borderRadius: '2px 2px 0 0', height: b.py * 0.68 + '%', alignSelf: 'flex-end', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: 9, color: '#ef4444', whiteSpace: 'nowrap' }}>{b.pyLabel}</div>
-              </div>
-              <div style={{ width: 14, background: TEAL, borderRadius: '2px 2px 0 0', height: b.np * 0.68 + '%', alignSelf: 'flex-end', position: 'relative' }}>
-                <div style={{ position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)', fontSize: 9, color: TEAL, whiteSpace: 'nowrap' }}>{b.npLabel}</div>
-              </div>
-            </div>
-            <div style={{ fontSize: 9, color: '#64748b', textAlign: 'center', lineHeight: 1.3 }}>{b.label}</div>
-          </div>
-        ))}
-      </div>
+      <svg width="100%" viewBox={`0 0 ${chartW} ${chartH}`} style={{ overflow: 'visible' }}>
+        {ticks.map(t => {
+          const y = padT + innerH - (t / maxVal) * innerH
+          return (
+            <g key={t}>
+              <line x1={padL} y1={y} x2={padL + innerW} y2={y} stroke="#f1f5f9" strokeWidth="1" />
+              <text x={padL - 3} y={y + 3} textAnchor="end" fontSize="7" fill="#94a3b8">{t}</text>
+            </g>
+          )
+        })}
+        <line x1={padL} y1={padT} x2={padL} y2={padT + innerH} stroke="#e2e8f0" strokeWidth="1" />
+        <text x={8} y={padT + innerH / 2} textAnchor="middle" fontSize="7" fill="#94a3b8" transform={`rotate(-90,8,${padT + innerH / 2})`}>Time/Memory</text>
+        {data.map((d, i) => {
+          const groupW = innerW / data.length
+          const barW = 9, gap = 2
+          const cx = padL + i * groupW + groupW / 2
+          const pyH = (d.py / maxVal) * innerH
+          const npH = Math.max((d.np / maxVal) * innerH, 1)
+          return (
+            <g key={i}>
+              <rect x={cx - barW - gap / 2} y={padT + innerH - pyH} width={barW} height={pyH} fill="#f87171" rx="1" />
+              <rect x={cx + gap / 2} y={padT + innerH - npH} width={barW} height={npH} fill="#1e3a5f" rx="1" />
+              {d.label.split('\n').map((line, li) => (
+                <text key={li} x={cx} y={padT + innerH + 9 + li * 9} textAnchor="middle" fontSize="7" fill="#64748b">{line}</text>
+              ))}
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }
@@ -331,14 +395,15 @@ function NeuralNetWidget() {
   const W = { '00': 0.8, '01': -0.3, '02': 0.5, '10': 0.2, '11': 0.7, '12': -0.4, '20': -0.6, '21': 0.4, '22': 0.9 }
   const hidden = [0, 1, 2].map(h => Math.tanh(inputs.reduce((s, v, i) => s + v * (W[`${i}${h}`] || 0.3), 0)))
   const outputs = [0, 1].map(o => (1 / (1 + Math.exp(-hidden.reduce((s, v, i) => s + v * (W[`${i}${o}`] || 0.4), 0))))).map(v => v.toFixed(3))
-
   return (
     <div style={{ border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 14px', background: 'white' }}>
-      <div style={{ fontSize: 12, fontWeight: 600, color: '#1e293b', marginBottom: 10 }}>Interactive Feed Forward Network</div>
-      <div style={{ display: 'flex', gap: 10 }}>
-        <div style={{ width: 130 }}>
+      <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 3 }}>Interactive Feed Forward Network</div>
+      <div style={{ fontSize: 11, color: '#64748b', marginBottom: 10 }}>Adjust the inputs and see how they flow through the network:</div>
+      <div style={{ display: 'flex', gap: 14 }}>
+        <div style={{ width: 115 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', marginBottom: 6 }}>Inputs</div>
           {inputs.map((val, i) => (
-            <div key={i} style={{ marginBottom: 8 }}>
+            <div key={i} style={{ marginBottom: 7 }}>
               <div style={{ fontSize: 10, color: '#64748b', marginBottom: 2 }}>Input {i + 1}: {val.toFixed(1)}</div>
               <input type="range" min="-1" max="1" step="0.1" value={val}
                 onChange={(e) => { const n = [...inputs]; n[i] = parseFloat(e.target.value); setInputs(n) }}
@@ -346,32 +411,37 @@ function NeuralNetWidget() {
             </div>
           ))}
         </div>
-        <div style={{ flex: 1, position: 'relative', minHeight: 90 }}>
-          <svg width="100%" height="90" viewBox="0 0 200 90">
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 4 }}>
+            <span style={{ fontSize: 9, fontWeight: 600, color: TEAL }}>Input Layer</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: '#16a34a' }}>Hidden Layer</span>
+            <span style={{ fontSize: 9, fontWeight: 600, color: '#dc2626' }}>Output Layer</span>
+          </div>
+          <svg width="100%" height="86" viewBox="0 0 200 86">
             {[0,1,2].map(i => [0,1,2].map(h => (
-              <line key={`${i}-${h}`} x1="30" y1={15+i*30} x2="100" y2={20+h*25} stroke="#e2e8f0" strokeWidth="1"/>
+              <line key={`${i}-${h}`} x1="30" y1={14+i*29} x2="100" y2={18+h*24} stroke="#e2e8f0" strokeWidth="1"/>
             )))}
             {[0,1,2].map(h => [0,1].map(o => (
-              <line key={`${h}-o${o}`} x1="100" y1={20+h*25} x2="170" y2={25+o*40} stroke="#e2e8f0" strokeWidth="1"/>
+              <line key={`${h}-o${o}`} x1="100" y1={18+h*24} x2="170" y2={23+o*38} stroke="#e2e8f0" strokeWidth="1"/>
             )))}
-            {inputs.map((v, i) => <circle key={i} cx="30" cy={15+i*30} r="10" fill={TEAL} opacity={0.6+0.4*Math.abs(v)} />)}
-            {hidden.map((v, i) => <circle key={i} cx="100" cy={20+i*25} r="10" fill="#22c55e" opacity={0.5+0.5*Math.abs(v)} />)}
-            {outputs.map((v, i) => <circle key={i} cx="170" cy={25+i*40} r="10" fill="#ef4444" opacity={0.5+0.5*parseFloat(v)} />)}
-            {inputs.map((v, i) => <text key={i} x="30" y={15+i*30+4} textAnchor="middle" fontSize="7" fill="white">I{i+1}</text>)}
-            {hidden.map((v, i) => <text key={i} x="100" y={20+i*25+4} textAnchor="middle" fontSize="7" fill="white">H{i+1}</text>)}
-            {outputs.map((v, i) => <text key={i} x="170" y={25+i*40+4} textAnchor="middle" fontSize="7" fill="white">O{i+1}</text>)}
-            <text x="30" y="88" textAnchor="middle" fontSize="8" fill="#94a3b8">Input</text>
-            <text x="100" y="88" textAnchor="middle" fontSize="8" fill="#94a3b8">Hidden</text>
-            <text x="170" y="88" textAnchor="middle" fontSize="8" fill="#94a3b8">Output</text>
+            {inputs.map((v, i) => <circle key={i} cx="30" cy={14+i*29} r="11" fill={TEAL} opacity={0.55+0.45*Math.abs(v)} />)}
+            {hidden.map((v, i) => <circle key={i} cx="100" cy={18+i*24} r="11" fill="#22c55e" opacity={0.5+0.5*Math.abs(v)} />)}
+            {outputs.map((v, i) => <circle key={i} cx="170" cy={23+i*38} r="11" fill="#ef4444" opacity={0.5+0.5*parseFloat(v)} />)}
+            {inputs.map((v, i) => <text key={i} x="30" y={14+i*29+4} textAnchor="middle" fontSize="7" fill="white">I{i+1}</text>)}
+            {hidden.map((v, i) => <text key={i} x="100" y={18+i*24+4} textAnchor="middle" fontSize="7" fill="white">H{i+1}</text>)}
+            {outputs.map((v, i) => <text key={i} x="170" y={23+i*38+4} textAnchor="middle" fontSize="7" fill="white">O{i+1}</text>)}
           </svg>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 10, marginTop: 6, fontSize: 11 }}>
-        {outputs.map((v, i) => (
-          <div key={i} style={{ flex: 1, background: '#f8fafc', borderRadius: 6, padding: '4px 8px', textAlign: 'center', color: '#475569' }}>
-            Output {i+1}: <strong style={{ color: TEAL }}>{v}</strong>
-          </div>
-        ))}
+      <div style={{ borderTop: '1px solid #f1f5f9', marginTop: 8, paddingTop: 8 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#1e293b', marginBottom: 5 }}>Live Calculations</div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {outputs.map((v, i) => (
+            <div key={i} style={{ flex: 1, background: '#f8fafc', borderRadius: 6, padding: '4px 8px', textAlign: 'center', fontSize: 11, color: '#475569' }}>
+              Output {i+1}: <strong style={{ color: TEAL }}>{v}</strong>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -379,144 +449,167 @@ function NeuralNetWidget() {
 
 // ── AI Chat slides ────────────────────────────────────────────────────────────
 
-function ChatSlide0() {
+function ChatSlide0({ hideSidebar = false }) {
   return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="chat" activeIdx={0} />
+    <div style={{ display: 'flex', height: 360 }}>
+      <MiniSidebar mode="chat" activeIdx={2} hidden={hideSidebar} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          <UserBubble text="What is machine learning and how does it work?" />
-          <TimeStamp t="12:15 PM" />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
           <AIBubble>
             <TextBlock>
-              <strong>Machine learning</strong> is a branch of AI where computers learn patterns from data — without being explicitly programmed for every scenario.<br /><br />
-              <strong>How it works:</strong><br />
-              1. <strong>Training</strong> — feed the model thousands of examples<br />
-              2. <strong>Pattern recognition</strong> — the model finds relationships<br />
-              3. <strong>Prediction</strong> — apply learned patterns to new data<br /><br />
-              Think of it like teaching a child to recognise dogs by showing them 1,000 photos — not by writing rules.
+              <strong>Forward Flow:</strong> Information flows in one direction only: Input → Hidden → Output
             </TextBlock>
-            <ReplyRow labels={['What is training data?', 'Types of ML?', 'Real examples?']} pulse />
-          </AIBubble>
-        </div>
-        <div style={{ padding: '10px 20px 14px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
-          <div style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', marginTop: 6 }}>🔒 Stored on your device only</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function ChatSlide1() {
-  const [open, setOpen] = useState(false)
-  const [answered, setAnswered] = useState(false)
-  return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="chat" activeIdx={1} />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          <UserBubble text="What is machine learning and how does it work?" />
-          <TimeStamp t="12:15 PM" />
-          <AIBubble>
-            <TextBlock>
-              Machine learning is a branch of AI where computers <strong>learn from data</strong> automatically.<br /><br />
-              1. <strong>Training</strong> — feed the model thousands of examples<br />
-              2. <strong>Pattern recognition</strong> — the model finds relationships<br />
-              3. <strong>Prediction</strong> — apply learned patterns to new data
-            </TextBlock>
-            <SectionLabel />
-            <TextBlock>
-              <strong>Interactive widget</strong> below shows a live neural network — drag the sliders to see how inputs change the output values in real time.
-            </TextBlock>
-            <div style={{ marginTop: 8 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#dcfce7', border: '1px solid #86efac', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#166534', marginBottom: 8 }}>
-                ● Interactive widget
-              </div>
-              <NeuralNetWidget />
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#94a3b8', marginBottom: 8, marginTop: 2 }}>↩ reply</div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#dcfce7', border: '1px solid #86efac', borderRadius: 6, padding: '3px 10px', fontSize: 11, color: '#166534', marginBottom: 8 }}>
+              ● Interactive widget
             </div>
-            <ReplyRow labels={['What are weights?', 'What is backprop?']} pulse={false} />
+            <NeuralNetWidget />
           </AIBubble>
         </div>
-        <div style={{ padding: '10px 20px 14px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
+        <div style={{ padding: '10px 18px 12px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
+          <div style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', marginTop: 5 }}>🔒 Stored on your device only — never sent to any server</div>
         </div>
       </div>
     </div>
   )
 }
 
-function ChatSlide2() {
+function ChatSlide1({ hideSidebar = false }) {
   return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="chat" activeIdx={2} />
+    <div style={{ display: 'flex', height: 360 }}>
+      <MiniSidebar mode="chat" activeIdx={6} hidden={hideSidebar} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          <UserBubble text="Show me NumPy vs pure Python performance comparison" />
-          <TimeStamp t="1:42 PM" />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
           <AIBubble>
             <TextBlock>
-              NumPy is <strong>10–100× faster</strong> than pure Python for numerical operations because it uses compiled C code and avoids Python's overhead for each element.
+              <strong>3. Speed Comparison: The Numbers Don't Lie</strong><br />
+              Let's see the performance difference with real data:
             </TextBlock>
-            <SectionLabel />
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#94a3b8', marginBottom: 8, marginTop: 2 }}>↩ reply</div>
+            <BarChart />
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#94a3b8', marginBottom: 8, marginTop: 8 }}>↩ reply</div>
             <TextBlock>
-              <strong>Speed comparison with real data (1 million numbers):</strong>
+              <strong>4. Key Features That Make NumPy Powerful</strong><br /><br />
+              <strong>Broadcasting:</strong> Automatically handles operations between different sized arrays
             </TextBlock>
-            <SectionLabel />
-            <div style={{ marginTop: 8 }}><BarChart /></div>
-            <ReplyRow labels={['Why is NumPy faster?', 'When to use NumPy?', 'Show code example']} pulse />
           </AIBubble>
         </div>
-        <div style={{ padding: '10px 20px 14px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
+        <div style={{ padding: '10px 18px 12px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
         </div>
       </div>
     </div>
   )
 }
 
-function ChatSlide3() {
-  const [open, setOpen] = useState(false)
-  const [answered, setAnswered] = useState(false)
-  const handleClick = () => {
-    if (open) return
-    setOpen(true)
-    setTimeout(() => setAnswered(true), 1200)
-  }
+function ChatSlide2({ hideSidebar = false }) {
   return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="chat" activeIdx={3} />
+    <div style={{ display: 'flex', height: 360 }}>
+      <MiniSidebar mode="docs" hidden={hideSidebar} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white', overflow: 'hidden' }}>
+        <div style={{ padding: '8px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13 }}>📄</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>Navakha_Architecture_Plan.pdf</span>
+          <span style={{ marginLeft: 'auto', background: '#f1f5f9', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#475569' }}>53 blocks</span>
+        </div>
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px' }}>
+            <div style={{ marginBottom: 10, padding: '10px 12px', border: `1.5px solid ${TEAL}`, borderRadius: 8, background: '#f0f7ff' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10 }}>
+                <thead>
+                  <tr>{['Tier', 'Model', 'Cost', 'Best for'].map((h, i) => (
+                    <th key={i} style={{ padding: '3px 6px', textAlign: 'left', color: '#475569', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody>
+                  {[['Tier 1','GPT-4o Mini','~Rs. 0.05','Simple Q&A'],['Tier 2','Haiku 3.5','~Rs. 0.15','Most responses'],['Tier 3','Sonnet 4.6','~Rs. 0.75','Complex queries']].map((row, i) => (
+                    <tr key={i} style={{ background: i % 2 ? '#f8fafc' : 'white' }}>
+                      {row.map((cell, j) => <td key={j} style={{ padding: '3px 6px', color: '#334155', borderBottom: '1px solid #f1f5f9' }}>{cell}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                <span style={{ background: TEAL, color: 'white', fontSize: 10, padding: '2px 10px', borderRadius: 12, cursor: 'pointer' }}>Ask</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.65 }}>2.2 Routing Decision Rules • Word count ≤ 6 + simple pattern → GPT-4o Mini • Visual keywords (diagram, chart, show me) → Haiku •</div>
+          </div>
+          <div style={{ width: 195, display: 'flex', flexDirection: 'column', borderLeft: `2px solid ${TEAL}`, flexShrink: 0 }}>
+            <div style={{ padding: '7px 10px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fbff' }}>
+              <div>
+                <span style={{ fontSize: 10.5, fontWeight: 600, color: '#334155' }}>Reply thread</span>
+                <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 1 }}>↑ Tier 3 — | Sonnet 4.6 | ~Rs...</div>
+              </div>
+              <div style={{ display: 'flex', gap: 5, color: '#94a3b8', fontSize: 13 }}>
+                <span style={{ cursor: 'pointer' }}>⤢</span>
+                <span style={{ cursor: 'pointer' }}>×</span>
+              </div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11, lineHeight: 1.65 }}>
+                Ask a question — only this section's context will be used.
+              </div>
+            </div>
+            <div style={{ padding: '7px 8px', borderTop: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center', border: `1.5px solid ${TEAL}`, borderRadius: 8, padding: '5px 9px' }}>
+                <span style={{ flex: 1, fontSize: 11, color: '#94a3b8' }}>Ask about this section...</span>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="#94a3b8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: '8px 14px 10px', borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '7px 14px', fontSize: 12, color: '#94a3b8' }}>Ask anything about this document...</div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ChatSlide3({ hideSidebar = false }) {
+  return (
+    <div style={{ display: 'flex', height: 360 }}>
+      <MiniSidebar mode="chat" activeIdx={6} hidden={hideSidebar} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
-          <UserBubble text="Explain bubble sort with time complexity" />
-          <TimeStamp t="3:08 PM" />
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 18px' }}>
           <AIBubble>
+            <div style={{ background: '#1e293b', borderRadius: 8, padding: '10px 12px', fontSize: 11, color: '#e2e8f0', fontFamily: 'monospace', lineHeight: 1.6, marginBottom: 8 }}>
+              <span style={{ color: '#94a3b8' }}># Instead of loops, NumPy does this in C:</span><br />
+              <span style={{ color: '#7dd3fc' }}>result</span>{' = '}<span style={{ color: '#86efac' }}>np.sin</span>(large_array){'  '}<span style={{ color: '#94a3b8' }}># Calculates sin for millions of numbers instantly</span>
+            </div>
+            <div style={{ textAlign: 'right', fontSize: 11, color: '#94a3b8', marginBottom: 8 }}>↩ reply</div>
             <TextBlock>
-              <strong>Bubble sort</strong> repeatedly steps through a list, compares adjacent elements and swaps them if they're in the wrong order.
+              <strong>Universal Functions (ufuncs):</strong> Pre-compiled C functions for speed <em>f(x) = sin(x), cos(x), log(x), etc.</em>
             </TextBlock>
-            <SectionLabel />
-            <TextBlock>
-              <strong>Time complexity:</strong><br />
-              • <strong>Best case:</strong> O(n) — already sorted<br />
-              • <strong>Average case:</strong> O(n²)<br />
-              • <strong>Worst case:</strong> O(n²) — reverse sorted
-            </TextBlock>
-            <div style={{ fontSize: 11, color: '#94a3b8', textAlign: 'right', margin: '3px 0 4px', cursor: 'pointer' }}>↩ reply</div>
-            <TextBlock>
-              <strong>Forward flow:</strong> Information flows in one direction only: Input → Processing → Output
-            </TextBlock>
-            <ReplyRow labels={['Why O(n²)?', 'Better alternatives?', 'Show the code']} onClickIndex={handleClick} pulse={!open} />
-            {open && (
-              <InlineThread
-                question="Why O(n²)?"
-                loading={!answered}
-                answer={<>For each of the <strong>n</strong> elements, we compare with up to <strong>n</strong> neighbours — giving n×n = <strong>n²</strong> comparisons in the worst case. Each pass guarantees the largest unsorted element "bubbles" to the end.</>}
-              />
-            )}
+            <div style={{ margin: '10px 0', border: `1.5px solid ${TEAL}`, borderLeft: `3px solid ${TEAL}`, borderRadius: 8, background: 'white', overflow: 'hidden' }}>
+              <div style={{ padding: '6px 12px', background: '#f0f7ff', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #dbeafe' }}>
+                <div>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#334155' }}>Reply thread</span>
+                  <span style={{ fontSize: 9, color: '#94a3b8', marginLeft: 6 }}>↑ Universal Functions (ufuncs): Pre-compiled C fu...</span>
+                </div>
+                <div style={{ display: 'flex', gap: 6, color: '#94a3b8', fontSize: 13 }}>
+                  <span>⤢</span><span>×</span>
+                </div>
+              </div>
+              <div style={{ padding: '14px 12px', textAlign: 'center', color: '#94a3b8', fontSize: 11 }}>
+                Ask a follow-up — only context up to this point will be sent.
+              </div>
+              <div style={{ padding: '7px 10px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 6, alignItems: 'center' }}>
+                <div style={{ flex: 1, border: `1.5px solid ${TEAL}`, borderRadius: 8, padding: '5px 10px', fontSize: 11, color: '#94a3b8' }}>Ask about this section...</div>
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="#94a3b8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </div>
+              </div>
+            </div>
           </AIBubble>
         </div>
-        <div style={{ padding: '10px 20px 14px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '10px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
+        <div style={{ padding: '10px 18px 12px', borderTop: '1px solid #f1f5f9', background: 'white' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#94a3b8' }}>Ask Navakha anything...</div>
+          <div style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', marginTop: 5 }}>🔒 Stored on your device only — never sent to any server</div>
         </div>
       </div>
     </div>
@@ -525,162 +618,107 @@ function ChatSlide3() {
 
 // ── Doc Chat slides ───────────────────────────────────────────────────────────
 
-const PY_BLOCKS = [
-  { title: 'Chapter 1: Getting Started', content: 'Python is a high-level, interpreted language known for its simplicity. Created by Guido van Rossum in 1991, it is widely used in data science, web development, and automation.' },
-  { title: 'Chapter 2: Variables & Types', content: 'Variables are created by assignment. Python supports: integers (int), floating-point (float), strings (str), booleans (bool), and complex numbers. Type conversion is done with int(), float(), str().' },
-  { title: 'Chapter 3: Control Flow', content: 'Python uses indentation to define blocks. if/elif/else control conditions. for loops iterate over sequences. while loops repeat while a condition is true. break and continue control loop flow.' },
-  { title: 'Chapter 4: Functions', content: 'Functions are defined with def. They can take parameters, have default values, and return values. *args and **kwargs allow flexible argument passing. Lambda creates anonymous one-liner functions.' },
-]
 
-function DocBlockRow({ block, expanded, onClick, showAsk, onAsk, asked }) {
+function DocSlide0({ hideSidebar = false }) {
   return (
-    <div onClick={onClick} style={{ marginBottom: 7, border: `1px solid ${expanded ? TEAL : '#e2e8f0'}`, borderRadius: 9, overflow: 'hidden', cursor: 'pointer', background: expanded ? '#f0f7ff' : 'white', transition: 'all 0.15s' }}>
-      <div style={{ padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>{block.title}</span>
-        <span style={{ fontSize: 12, color: expanded ? TEAL : '#94a3b8' }}>{expanded ? '▲' : '▼'}</span>
-      </div>
-      {expanded && (
-        <div style={{ padding: '0 12px 10px', fontSize: 12, color: '#475569', lineHeight: 1.6 }}>
-          {block.content}
-          {showAsk && (
-            <button onClick={(e) => { e.stopPropagation(); onAsk?.() }} style={{ marginTop: 8, display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 12px', background: asked ? '#dcfce7' : '#eff6ff', border: `1.5px solid ${asked ? '#86efac' : TEAL}`, borderRadius: 20, color: asked ? '#15803d' : TEAL, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', animation: !asked ? 'replyPulse 2s ease-in-out infinite' : 'none' }}>
-              {asked ? '✓ Asked' : '💬 Ask about this section'}
-            </button>
-          )}
+    <div style={{ display: 'flex', height: 360 }}>
+      <MiniSidebar mode="docs" hidden={hideSidebar} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white', overflow: 'hidden' }}>
+        <div style={{ padding: '8px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13 }}>📄</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>House_Building_Plan.pdf</span>
+          <span style={{ marginLeft: 'auto', background: '#f1f5f9', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#475569' }}>42 blocks</span>
         </div>
-      )}
-    </div>
-  )
-}
-
-function DocSlide0() {
-  const [exp, setExp] = useState(0)
-  return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="docs" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-        <div style={{ padding: '10px 16px 8px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 14 }}>📄</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>Introduction_to_Python.pdf</span>
-          <span style={{ marginLeft: 'auto', background: '#f1f5f9', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#475569' }}>48 blocks</span>
-        </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
-          {PY_BLOCKS.map((b, i) => (
-            <DocBlockRow key={i} block={b} expanded={exp === i} onClick={() => setExp(i)} />
-          ))}
-          <div style={{ textAlign: 'center', fontSize: 11, color: MUTED, marginTop: 8 }}>
-            ☝️ Click any chapter block to expand and read
+        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+          <div style={{ flex: 1, overflowY: 'auto', padding: '10px 14px' }}>
+            <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.65, marginBottom: 10 }}>3.1 Cost Per Phase</div>
+            <div style={{ marginBottom: 10, padding: '10px 12px', border: `1.5px solid ${TEAL}`, borderRadius: 8, background: '#f0f7ff' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5 }}>
+                <thead>
+                  <tr>{['Phase', 'Task', 'Cost', 'Timeline'].map((h, i) => (
+                    <th key={i} style={{ padding: '4px 7px', textAlign: 'left', color: '#475569', fontWeight: 600, borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                  ))}</tr>
+                </thead>
+                <tbody>
+                  {[
+                    ['Phase 1', 'Foundation & Excavation', '~₹2,50,000', '3 weeks'],
+                    ['Phase 2', 'Walls & Structure', '~₹8,00,000', '8 weeks'],
+                    ['Phase 3', 'Roofing & Finishing', '~₹3,50,000', '4 weeks'],
+                  ].map((row, i) => (
+                    <tr key={i} style={{ background: i % 2 ? '#f8fafc' : 'white' }}>
+                      {row.map((cell, j) => <td key={j} style={{ padding: '4px 7px', color: '#334155', borderBottom: '1px solid #f1f5f9' }}>{cell}</td>)}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
+                <span style={{ background: TEAL, color: 'white', fontSize: 10, padding: '3px 12px', borderRadius: 12, cursor: 'pointer' }}>Ask</span>
+              </div>
+            </div>
+            <div style={{ fontSize: 11, color: '#64748b', lineHeight: 1.65 }}>
+              3.2 Material Selection • Cement: OPC 53 grade • Sand: River sand preferred • Steel: Fe500 TMT bars • Aggregate: 20mm crushed granite •
+            </div>
           </div>
-        </div>
-        <div style={{ padding: '10px 16px 14px', borderTop: '1px solid #f1f5f9' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#94a3b8' }}>Ask anything about this document...</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function DocSlide1() {
-  const [asked, setAsked] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [answered, setAnswered] = useState(false)
-
-  const handleAsk = () => {
-    if (asked) return
-    setAsked(true)
-    setLoading(true)
-    setTimeout(() => { setLoading(false); setAnswered(true) }, 1400)
-  }
-
-  return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="docs" />
-      <div style={{ flex: 1, display: 'flex', background: 'white' }}>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', borderRight: '1px solid #f1f5f9' }}>
-          <div style={{ padding: '6px 8px 8px', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-            <span>📄</span><span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>Introduction_to_Python.pdf</span>
-          </div>
-          <DocBlockRow block={PY_BLOCKS[0]} expanded={false} onClick={() => {}} />
-          <DocBlockRow block={PY_BLOCKS[1]} expanded showAsk onAsk={handleAsk} asked={asked} onClick={() => {}} />
-          <DocBlockRow block={PY_BLOCKS[2]} expanded={false} onClick={() => {}} />
-          <DocBlockRow block={PY_BLOCKS[3]} expanded={false} onClick={() => {}} />
-        </div>
-        <div style={{ width: 240, display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
-          <div style={{ padding: '9px 12px', borderBottom: '1px solid #e2e8f0', fontSize: 11, fontWeight: 600, color: '#475569' }}>
-            Chapter 2 — reply thread
-          </div>
-          <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {asked && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ background: TEAL, color: 'white', padding: '7px 11px', borderRadius: '11px 11px 3px 11px', fontSize: 11, maxWidth: '85%' }}>
-                  What is the difference between int and float?
+          <div style={{ width: 195, display: 'flex', flexDirection: 'column', borderLeft: `2px solid ${TEAL}`, flexShrink: 0 }}>
+            <div style={{ padding: '7px 10px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#f8fbff' }}>
+              <div>
+                <span style={{ fontSize: 10.5, fontWeight: 600, color: '#334155' }}>Reply thread</span>
+                <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 1 }}>↑ Phase 3 — | Roofing &...</div>
+              </div>
+              <div style={{ display: 'flex', gap: 5, color: '#94a3b8', fontSize: 13 }}>
+                <span>⤢</span><span>×</span>
+              </div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '12px' }}>
+              <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: 11, lineHeight: 1.65 }}>
+                Ask a question — only this section's context will be used.
+              </div>
+            </div>
+            <div style={{ padding: '7px 8px', borderTop: '1px solid #e2e8f0' }}>
+              <div style={{ display: 'flex', gap: 5, alignItems: 'center', border: `1.5px solid ${TEAL}`, borderRadius: 8, padding: '5px 9px' }}>
+                <span style={{ flex: 1, fontSize: 11, color: '#94a3b8' }}>Ask about this section...</span>
+                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <svg width="10" height="10" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="#94a3b8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </div>
               </div>
-            )}
-            {loading && <div style={{ display: 'flex', gap: 4 }}>{[0,1,2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: '50%', background: MUTED, display: 'inline-block', animation: `dotPulse 1.2s ${d*0.2}s ease-in-out infinite` }} />)}</div>}
-            {answered && (
-              <div style={{ fontSize: 11, color: '#334155', background: 'white', border: '1px solid #e2e8f0', borderRadius: '11px 11px 11px 3px', padding: '7px 11px', lineHeight: 1.6 }}>
-                <strong>int</strong> stores whole numbers (1, 42, -7). <strong>float</strong> stores decimals (3.14, -0.5). In Python, dividing two ints returns a float: <code style={{ background: '#f1f5f9', padding: '1px 4px', borderRadius: 3 }}>7 / 2 = 3.5</code>
-              </div>
-            )}
-          </div>
-          <div style={{ padding: '8px 10px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 6 }}>
-            <div style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 9px', fontSize: 11, color: '#94a3b8' }}>Ask about this section…</div>
-            <div style={{ width: 26, height: 26, borderRadius: '50%', background: TEAL, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </div>
           </div>
+        </div>
+        <div style={{ padding: '8px 14px 10px', borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '7px 14px', fontSize: 12, color: '#94a3b8' }}>Ask anything about this document...</div>
         </div>
       </div>
     </div>
   )
 }
 
-function DocSlide2() {
-  const [msg, setMsg] = useState('')
-  const [msgs, setMsgs] = useState([
-    { role: 'user', text: 'What is a neural network and how does it learn?' },
-    { role: 'ai', text: 'A neural network is a system of connected nodes (neurons) organised in layers. It learns by adjusting weights through a process called backpropagation — comparing its output to the correct answer and reducing the error.' },
-    { role: 'user', text: 'What is gradient descent?' },
-    { role: 'ai', text: 'Gradient descent is how the network updates its weights. It calculates the slope (gradient) of the error and moves weights in the direction that reduces the error — like rolling a ball downhill to find the lowest point.' },
-  ])
-  const [sending, setSending] = useState(false)
-
-  const handleSend = () => {
-    if (!msg.trim() || sending) return
-    const q = msg.trim(); setMsg('')
-    setMsgs(prev => [...prev, { role: 'user', text: q }])
-    setSending(true)
-    setTimeout(() => { setMsgs(prev => [...prev, { role: 'ai', text: 'Great question! Let me check the document for that.' }]); setSending(false) }, 900)
-  }
-
+function DocSlide1({ hideSidebar = false }) {
   return (
-    <div style={{ display: 'flex', height: 440 }}>
-      <MiniSidebar mode="docs" />
+    <div style={{ display: 'flex', height: 360 }}>
+      <MiniSidebar mode="docs" hidden={hideSidebar} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
-        <div style={{ padding: '9px 16px 7px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span>📄</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>Introduction_to_AI.pdf</span>
-          <span style={{ marginLeft: 'auto', fontSize: 11, color: MUTED }}>{msgs.length} messages</span>
+        <div style={{ padding: '8px 14px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13 }}>📄</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>House_Building_Plan.pdf</span>
+          <span style={{ marginLeft: 'auto', background: '#f1f5f9', borderRadius: 6, padding: '2px 8px', fontSize: 11, color: '#475569' }}>42 blocks</span>
         </div>
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {msgs.map((m, i) => m.role === 'user' ? (
-            <div key={i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{ background: TEAL, color: 'white', padding: '8px 13px', borderRadius: '13px 13px 3px 13px', fontSize: 12, maxWidth: '78%', lineHeight: 1.5 }}>{m.text}</div>
-            </div>
-          ) : (
-            <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-              <div style={{ width: 24, height: 24, borderRadius: 6, background: 'linear-gradient(135deg,#185FA5,#1D9E75)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'white', flexShrink: 0 }}>N</div>
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '0 13px 13px 13px', padding: '8px 12px', fontSize: 12, color: '#334155', lineHeight: 1.6, maxWidth: '78%' }}>{m.text}</div>
-            </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 18px' }}>
+          {[
+            'The concrete mix for M25 grade foundation requires a water-cement ratio of 0.45. Quality gain: using crushed stone aggregate instead of natural gravel gives significantly better compressive strength. Total: adds ₹8,000 to the foundation cost — worth it. 3.2 Waterproofing Strategy',
+            'Without a proper drainage plan, every monsoon season requires expensive repairs. By year 3, you are repairing 3× the surface area — costs multiply linearly. How it works: Phase 1–3: core structure built normally. After Phase 3: waterproofing membrane applied to all exposed surfaces.',
+            '• Phase 4–6: [waterproofing layer] + last 3 phases of interior work done together • After Phase 6: plastering begins. Quality check at each milestone. • Phase 7–9: [new waterproofing check] + electrical and plumbing — repeat until handover. Cost savings example:',
+            'Phase Number  Without Plan  With Plan  Savings\nFoundation  ₹3,20,000  ₹2,50,000  ₹70,000',
+          ].map((text, i) => (
+            <p key={i} style={{ fontSize: 12, color: '#334155', lineHeight: 1.75, marginBottom: 14 }}>{text}</p>
           ))}
-          {sending && <div style={{ display: 'flex', gap: 4, paddingLeft: 31 }}>{[0,1,2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: '50%', background: MUTED, display: 'inline-block', animation: `dotPulse 1.2s ${d*0.2}s ease-in-out infinite` }} />)}</div>}
         </div>
-        <div style={{ padding: '10px 16px 14px', borderTop: '1px solid #f1f5f9', display: 'flex', gap: 10 }}>
-          <input value={msg} onChange={e => setMsg(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSend()} placeholder="Ask anything about this document..." style={{ flex: 1, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '9px 14px', fontSize: 13, color: '#334155', outline: 'none', fontFamily: 'inherit' }} />
-          <button onClick={handleSend} style={{ width: 36, height: 36, borderRadius: '50%', background: msg.trim() ? TEAL : '#e2e8f0', border: 'none', cursor: msg.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, alignSelf: 'center' }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
+        <div style={{ padding: '8px 14px 10px', borderTop: '1px solid #f1f5f9' }}>
+          <div style={{ background: 'white', border: `1.5px solid ${TEAL}`, borderRadius: 12, padding: '8px 14px', fontSize: 12, color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Ask anything about this document...</span>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="#94a3b8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -690,22 +728,28 @@ function DocSlide2() {
 // ── Carousel demo ─────────────────────────────────────────────────────────────
 
 const CHAT_SLIDES = [
-  { label: 'Ask anything', desc: 'Get rich, structured answers to any question', Component: ChatSlide0 },
-  { label: 'Interactive learning', desc: 'AI builds interactive widgets — drag sliders, see live results', Component: ChatSlide1 },
-  { label: 'Charts & visualisations', desc: 'Complex data explained through interactive charts', Component: ChatSlide2 },
-  { label: 'Reply to any section', desc: 'Click ↩ reply on any part to ask without losing context', Component: ChatSlide3 },
+  { label: 'Interactive widgets', desc: 'AI builds interactive widgets — drag sliders to see neural network outputs change in real time', Component: ChatSlide0 },
+  { label: 'Charts & comparisons', desc: 'Complex data explained through interactive charts — NumPy vs Python performance', Component: ChatSlide1 },
+  { label: 'Reply to any section', desc: 'Click ↩ reply on any block to ask a follow-up — only that section\'s context is used', Component: ChatSlide3 },
 ]
 
 const DOC_SLIDES = [
-  { label: 'Upload & browse', desc: 'Upload any PDF or doc — instantly split into readable sections', Component: DocSlide0 },
-  { label: 'Ask about any section', desc: 'Click a block, ask your question — get answers from that exact part', Component: DocSlide1 },
-  { label: 'Chat with the whole doc', desc: 'Ask questions about the entire document in one conversation', Component: DocSlide2 },
+  { label: 'Ask about any section', desc: 'Click Ask on any block to open a focused reply thread — only that section\'s context is used', Component: DocSlide0 },
+  { label: 'Browse your document', desc: 'Your document is split into readable sections — scroll and read naturally', Component: DocSlide1 },
 ]
 
 function InteractiveDemo() {
   const [tab, setTab] = useState('chat')
   const [chatIdx, setChatIdx] = useState(0)
   const [docIdx, setDocIdx] = useState(0)
+  const [narrow, setNarrow] = useState(false)
+
+  useEffect(() => {
+    const check = () => setNarrow(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const idx = tab === 'chat' ? chatIdx : docIdx
   const setIdx = tab === 'chat' ? setChatIdx : setDocIdx
@@ -718,16 +762,20 @@ function InteractiveDemo() {
 
   return (
     <div style={{ background: '#1a2744', border: `1px solid ${BORDER}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.5)', width: '100%', maxWidth: 960, margin: '0 auto' }}>
-      {/* Window chrome — no tab bar, just traffic lights + URL */}
+      {/* Window chrome */}
       <div style={{ background: '#111827', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
         <div style={{ display: 'flex', gap: 6 }}>
           {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />)}
         </div>
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 6, padding: '3px 20px', fontSize: 12, color: MUTED }}>
-            navakha.vercel.app/app
-          </div>
-        </div>
+        <div style={{ flex: 1 }} />
+        <button
+          onClick={() => document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })}
+          style={{ padding: '5px 16px', background: TEAL, border: 'none', borderRadius: 7, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5, transition: 'background 0.15s' }}
+          onMouseOver={(e) => { e.currentTarget.style.background = '#0C447C' }}
+          onMouseOut={(e) => { e.currentTarget.style.background = TEAL }}
+        >
+          ← Back to Launch screen
+        </button>
       </div>
 
       {/* Feature tabs */}
@@ -744,8 +792,8 @@ function InteractiveDemo() {
       </div>
 
       {/* Slide */}
-      <div style={{ background: 'white' }}>
-        <Component key={`${tab}-${idx}`} />
+      <div style={{ background: 'white', overflow: 'hidden' }}>
+        <Component key={`${tab}-${idx}`} hideSidebar={narrow} />
       </div>
 
       {/* Nav bar */}
@@ -760,10 +808,11 @@ function InteractiveDemo() {
       </div>
 
       {/* Slide description */}
-      <div style={{ background: '#0d1829', padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ background: '#0d1829', padding: '10px 16px', display: 'flex', flexDirection: narrow ? 'column' : 'row', justifyContent: 'space-between', alignItems: narrow ? 'flex-start' : 'center', gap: 2 }}>
         <div>
           <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{label}</span>
-          <span style={{ fontSize: 13, color: MUTED, marginLeft: 10 }}>{desc}</span>
+          {!narrow && <span style={{ fontSize: 13, color: MUTED, marginLeft: 10 }}>{desc}</span>}
+          {narrow && <p style={{ fontSize: 12, color: MUTED, margin: '2px 0 0' }}>{desc}</p>}
         </div>
       </div>
     </div>
@@ -809,52 +858,47 @@ export default function LandingPage() {
       <Navbar onLogin={goLogin} onGetStarted={goSignup} />
 
       {/* ── Hero ── */}
-      <section id="hero" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '80px clamp(16px, 4vw, 48px)', background: BG }}>
-        <h1 style={{ fontSize: 'clamp(36px, 6vw, 60px)', fontWeight: 700, color: TEXT, lineHeight: 1.15, marginBottom: 20, maxWidth: 700 }}>
+      <section id="hero" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: 'clamp(40px, 5vw, 72px) clamp(16px, 4vw, 48px) clamp(48px, 6vw, 80px)', background: BG }}>
+        <h1 style={{ fontSize: 'clamp(32px, 5.5vw, 56px)', fontWeight: 700, color: TEXT, lineHeight: 1.15, marginBottom: 16, maxWidth: 700 }}>
           Learn anything.<br />Understand everything.
         </h1>
-        <p style={{ fontSize: 18, color: MUTED, maxWidth: 500, lineHeight: 1.6, marginBottom: 40 }}>
+        <p style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', color: MUTED, maxWidth: 480, lineHeight: 1.6, marginBottom: 28 }}>
           An AI tutor that reads your documents and answers your questions — powered by Claude and GPT-4.
         </p>
-        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 }}>
-          <button onClick={goSignup} style={{ padding: '14px 32px', background: TEAL, border: 'none', borderRadius: 10, color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
+          <button onClick={goSignup} style={{ padding: '12px 28px', background: TEAL, border: 'none', borderRadius: 10, color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
             onMouseOver={(e) => e.currentTarget.style.background = '#0C447C'}
             onMouseOut={(e) => e.currentTarget.style.background = TEAL}>
             Get started free
           </button>
           <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-            style={{ padding: '14px 32px', background: 'none', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: 10, color: TEXT, fontSize: 16, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
+            style={{ padding: '12px 28px', background: 'none', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: 10, color: TEXT, fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
             onMouseOver={(e) => e.currentTarget.style.borderColor = TEAL}
             onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'}>
             See how it works
           </button>
         </div>
-        <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)' }}>Free to start · No credit card required</p>
-      </section>
-
-      {/* ── Features ── */}
-      <Section alt>
-        <SectionHeading title="Everything you need to learn faster" sub="Two powerful modes built for students and researchers" />
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+        <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginBottom: 32 }}>Free to start · No credit card required</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, width: '100%', maxWidth: 820 }}>
           <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT-4." />
           <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section — or the whole document." />
           <FeatureCard Icon={BrainIcon} title="Smart replies" body="Every response has ↩ reply buttons. Ask about any specific part without scrolling or starting over." />
         </div>
-      </Section>
+      </section>
 
       {/* ── How it works ── */}
       <Section id="how-it-works" wide>
         <SectionHeading
           title="See it in action"
-          sub="This is the real Navakha — click around the slides below"
+          sub="Explore the features — click the slides to interact"
         />
 
         <InteractiveDemo />
 
         <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', marginTop: 64 }}>
-          <Step number="01" title="Create your account" body="Sign up with your name, email and password. Get a 6-digit code to verify. Free plan, no credit card." />
-          <Step number="02" title="Upload or ask" body="Start a chat instantly, or upload a PDF, Word doc, spreadsheet, or text file." />
-          <Step number="03" title="Get answers" body="Get rich, structured answers. Reply to any section. Ask about the whole document. No scrolling needed." />
+          <Step number="01" title="Create your account" body="Sign up free with your email — no credit card needed. You'll get a 6-digit code to verify. Takes under a minute." />
+          <Step number="02" title="Upload or ask" body="Start chatting instantly about any topic, or upload a PDF, Word doc, or text file to study its contents." />
+          <Step number="03" title="Get rich answers" body="Get structured answers with diagrams, charts, and code. Click ↩ reply on any section to dig deeper — no scrolling needed." />
         </div>
 
         {/* Prominent back-to-top */}
@@ -905,7 +949,11 @@ export default function LandingPage() {
 
       <style>{`
         @keyframes dotPulse { 0%,60%,100%{opacity:.2;transform:scale(.8)} 30%{opacity:1;transform:scale(1)} }
-        @keyframes replyPulse { 0%,100%{box-shadow:0 0 0 0 rgba(24,95,165,.35)} 50%{box-shadow:0 0 0 5px rgba(24,95,165,0)} }
+        @keyframes replyPulse {
+          0%   { box-shadow: 0 0 0 0 rgba(24,95,165,0.6); background: rgba(24,95,165,0.12); }
+          50%  { box-shadow: 0 0 0 7px rgba(24,95,165,0); background: rgba(24,95,165,0.22); }
+          100% { box-shadow: 0 0 0 0 rgba(24,95,165,0); background: rgba(24,95,165,0.12); }
+        }
       `}</style>
     </div>
   )

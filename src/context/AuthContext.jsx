@@ -9,6 +9,7 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
 
   const refreshProfile = async (userId) => {
     try {
@@ -32,10 +33,37 @@ export function AuthProvider({ children }) {
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, s) => {
+      async (_event, s) => {
+        if (_event === 'PASSWORD_RECOVERY') {
+          setIsPasswordRecovery(true)
+          setSession(s)
+          setUser(s?.user ?? null)
+          return
+        }
+        setIsPasswordRecovery(false)
         setSession(s)
         setUser(s?.user ?? null)
         if (s?.user) {
+          if (_event === 'SIGNED_IN') {
+            const raw = localStorage.getItem('navakha_pending_signup')
+            if (raw) {
+              try {
+                const pending = JSON.parse(raw)
+                if (s.user.email === pending.email) {
+                  localStorage.removeItem('navakha_pending_signup')
+                  if (pending.password) {
+                    await supabase.auth.updateUser({ password: pending.password })
+                  }
+                  const { data: existing } = await supabase.from('profiles').select('id').eq('id', s.user.id).single()
+                  if (!existing) {
+                    await supabase.from('profiles').insert({ id: s.user.id, email: s.user.email, name: pending.name })
+                  } else if (pending.name) {
+                    await supabase.from('profiles').update({ name: pending.name }).eq('id', s.user.id)
+                  }
+                }
+              } catch {}
+            }
+          }
           refreshProfile(s.user.id)
         } else {
           setProfile(null)
@@ -59,6 +87,7 @@ export function AuthProvider({ children }) {
       profile,
       session,
       loading,
+      isPasswordRecovery,
       signOut: handleSignOut,
       refreshProfile: () => user && refreshProfile(user.id),
     }}>

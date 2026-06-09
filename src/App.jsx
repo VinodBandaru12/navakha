@@ -113,6 +113,7 @@ function WelcomeScreen({ onStart, hasKey, onOpenSettings }) {
 // ── App Shell (the main chat/doc UI, shown at /app) ────────────────────────
 function AppShell() {
   const { session, profile } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('navakha_sidebar_open') === 'false'
@@ -284,6 +285,21 @@ function AppShell() {
               {activeConv?.title || 'Navakha'}
             </span>
           </div>
+          <button
+            onClick={() => navigate('/')}
+            title="Back to home"
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              padding: '5px 12px', background: 'none',
+              border: '1px solid rgba(0,0,0,0.12)', borderRadius: 7,
+              color: '#64748b', fontSize: 12, fontWeight: 500,
+              cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
+            }}
+            onMouseOver={e => { e.currentTarget.style.borderColor = '#185FA5'; e.currentTarget.style.color = '#185FA5' }}
+            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)'; e.currentTarget.style.color = '#64748b' }}
+          >
+            ← Home
+          </button>
         </div>
 
         {activeMode === 'document' ? (

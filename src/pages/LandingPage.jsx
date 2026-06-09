@@ -79,7 +79,7 @@ function Navbar({ onLogin, onGetStarted }) {
     <nav style={{
       position: 'sticky', top: 0, zIndex: 100,
       background: BG, borderBottom: `1px solid ${BORDER}`,
-      padding: '0 48px', height: 64,
+      padding: '0 clamp(16px, 4vw, 48px)', height: 64,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -102,10 +102,10 @@ function Navbar({ onLogin, onGetStarted }) {
   )
 }
 
-function Section({ children, alt = false, id, style = {} }) {
+function Section({ children, alt = false, id, style = {}, wide = false }) {
   return (
-    <section id={id} style={{ background: alt ? SECTION_BG_ALT : BG, padding: '80px 48px', ...style }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>{children}</div>
+    <section id={id} style={{ background: alt ? SECTION_BG_ALT : BG, padding: '80px clamp(16px, 4vw, 48px)', ...style }}>
+      <div style={{ maxWidth: wide ? 1200 : 1100, margin: '0 auto' }}>{children}</div>
     </section>
   )
 }
@@ -596,7 +596,6 @@ function DocSlide1() {
     <div style={{ display: 'flex', height: 440 }}>
       <MiniSidebar mode="docs" />
       <div style={{ flex: 1, display: 'flex', background: 'white' }}>
-        {/* Doc blocks */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '10px 12px', borderRight: '1px solid #f1f5f9' }}>
           <div style={{ padding: '6px 8px 8px', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span>📄</span><span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>Introduction_to_Python.pdf</span>
@@ -606,7 +605,6 @@ function DocSlide1() {
           <DocBlockRow block={PY_BLOCKS[2]} expanded={false} onClick={() => {}} />
           <DocBlockRow block={PY_BLOCKS[3]} expanded={false} onClick={() => {}} />
         </div>
-        {/* Sub-chat panel */}
         <div style={{ width: 240, display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
           <div style={{ padding: '9px 12px', borderBottom: '1px solid #e2e8f0', fontSize: 11, fontWeight: 600, color: '#475569' }}>
             Chapter 2 — reply thread
@@ -641,10 +639,10 @@ function DocSlide1() {
 function DocSlide2() {
   const [msg, setMsg] = useState('')
   const [msgs, setMsgs] = useState([
-    { role: 'user', text: 'What is the difference between a list and a tuple in Python?' },
-    { role: 'ai', text: 'A list is mutable — you can add, remove, or change elements. A tuple is immutable — once created, it cannot be changed. Use lists for collections that change; use tuples for fixed data like coordinates.' },
-    { role: 'user', text: 'Can tuples be used as dictionary keys?' },
-    { role: 'ai', text: 'Yes! Because tuples are immutable (hashable), they can be dictionary keys. Lists cannot, since they\'re mutable. Example: {(1,2): "point A"} works, but {[1,2]: "point A"} raises a TypeError.' },
+    { role: 'user', text: 'What is a neural network and how does it learn?' },
+    { role: 'ai', text: 'A neural network is a system of connected nodes (neurons) organised in layers. It learns by adjusting weights through a process called backpropagation — comparing its output to the correct answer and reducing the error.' },
+    { role: 'user', text: 'What is gradient descent?' },
+    { role: 'ai', text: 'Gradient descent is how the network updates its weights. It calculates the slope (gradient) of the error and moves weights in the direction that reduces the error — like rolling a ball downhill to find the lowest point.' },
   ])
   const [sending, setSending] = useState(false)
 
@@ -662,7 +660,7 @@ function DocSlide2() {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: 'white' }}>
         <div style={{ padding: '9px 16px 7px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span>📄</span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>Introduction_to_Python.pdf</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#1e293b' }}>Introduction_to_AI.pdf</span>
           <span style={{ marginLeft: 'auto', fontSize: 11, color: MUTED }}>{msgs.length} messages</span>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -719,7 +717,7 @@ function InteractiveDemo() {
   const next = () => setIdx(i => Math.min(total - 1, i + 1))
 
   return (
-    <div style={{ background: '#1a2744', border: `1px solid ${BORDER}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.5)', maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ background: '#1a2744', border: `1px solid ${BORDER}`, borderRadius: 16, overflow: 'hidden', boxShadow: '0 32px 80px rgba(0,0,0,0.5)', width: '100%', maxWidth: 960, margin: '0 auto' }}>
       {/* Window chrome — no tab bar, just traffic lights + URL */}
       <div style={{ background: '#111827', padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: `1px solid rgba(255,255,255,0.06)` }}>
         <div style={{ display: 'flex', gap: 6 }}>
@@ -811,7 +809,7 @@ export default function LandingPage() {
       <Navbar onLogin={goLogin} onGetStarted={goSignup} />
 
       {/* ── Hero ── */}
-      <section id="hero" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '80px 48px', background: BG }}>
+      <section id="hero" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '80px clamp(16px, 4vw, 48px)', background: BG }}>
         <h1 style={{ fontSize: 'clamp(36px, 6vw, 60px)', fontWeight: 700, color: TEXT, lineHeight: 1.15, marginBottom: 20, maxWidth: 700 }}>
           Learn anything.<br />Understand everything.
         </h1>
@@ -845,7 +843,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ── How it works ── */}
-      <Section id="how-it-works">
+      <Section id="how-it-works" wide>
         <SectionHeading
           title="See it in action"
           sub="This is the real Navakha — click around the slides below"
@@ -883,7 +881,7 @@ export default function LandingPage() {
       </Section>
 
       {/* ── Footer ── */}
-      <footer style={{ background: BG, borderTop: `1px solid ${BORDER}`, padding: '32px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+      <footer style={{ background: BG, borderTop: `1px solid ${BORDER}`, padding: '32px clamp(16px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <NavakhaLogo size={24} />
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Navakha</span>

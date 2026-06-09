@@ -23,13 +23,30 @@ export default async function handler(req, res) {
   }
 
   // 2. Check usage limit
-  const { data: profile } = await supabase
+  let { data: profile } = await supabase
     .from('profiles')
     .select('messages_used, messages_limit, plan')
     .eq('id', user.id)
     .single()
 
-  if (profile.messages_used >= profile.messages_limit) {
+  // Profile missing — create it on the fly (handles race conditions and missing trigger)
+  if (!profile) {
+    const { data: created } = await supabase
+      .from('profiles')
+      .upsert({
+        id: user.id,
+        email: user.email,
+        name: user.email?.split('@')[0] || 'User',
+      })
+      .select('messages_used, messages_limit, plan')
+      .single()
+    profile = created
+  }
+
+  const messagesUsed = profile?.messages_used ?? 0
+  const messagesLimit = profile?.messages_limit ?? 50
+
+  if (messagesUsed >= messagesLimit) {
     return res.status(429).json({
       error: 'limit_reached',
       message: 'Monthly message limit reached. Please upgrade your plan.'
@@ -88,7 +105,7 @@ export default async function handler(req, res) {
   // 5. Increment usage
   await supabase
     .from('profiles')
-    .update({ messages_used: profile.messages_used + 1 })
+    .update({ messages_used: messagesUsed + 1 })
     .eq('id', user.id)
 
   // 6. Log usage event

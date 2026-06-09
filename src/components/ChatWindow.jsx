@@ -263,7 +263,7 @@ export default function ChatWindow({
         onSend={() => handleSend()}
         onCancel={cancelStream}
         streaming={streaming}
-        disabled={!apiKey || !conversationId}
+        disabled={!(apiKey || accessToken) || !conversationId}
       />
     </div>
   );

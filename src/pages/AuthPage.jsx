@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { signIn, sendSignupOtp, resetPassword, updatePassword } from '../lib/auth'
+import { signIn, signUpWithPassword, resendConfirmation, resetPassword, updatePassword } from '../lib/auth'
 import { useAuth } from '../context/AuthContext'
 import NavakhaLogo from '../components/NavakhaLogo'
 
@@ -253,16 +253,11 @@ export default function AuthPage() {
     setLoading(true)
     setError('')
     try {
-      localStorage.setItem('navakha_pending_signup', JSON.stringify({
-        email: signupEmail.trim(),
-        password,
-        name: `${firstName.trim()} ${lastName.trim()}`,
-      }))
-      await sendSignupOtp(signupEmail.trim())
+      await signUpWithPassword(signupEmail.trim(), password, `${firstName.trim()} ${lastName.trim()}`)
       setStep('otp')
-      setResendCountdown(30)
+      setResendCountdown(60)
     } catch (err) {
-      setError(err.message || 'Failed to send code. Please try again.')
+      setError(err.message || 'Failed to create account. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -272,8 +267,8 @@ export default function AuthPage() {
     if (resendCountdown > 0 || loading) return
     setLoading(true); setError('')
     try {
-      await sendSignupOtp(signupEmail.trim())
-      setResendCountdown(30)
+      await resendConfirmation(signupEmail.trim())
+      setResendCountdown(60)
     } catch (err) {
       setError('Failed to resend. Please try again.')
     } finally {
@@ -328,7 +323,7 @@ export default function AuthPage() {
     }
   }
 
-  const switchMode = (m) => { setMode(m); setStep('form'); setError(''); setForgotSent(false); localStorage.removeItem('navakha_pending_signup') }
+  const switchMode = (m) => { setMode(m); setStep('form'); setError(''); setForgotSent(false) }
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
@@ -408,7 +403,7 @@ export default function AuthPage() {
         mode === 'signup' && step === 'otp' ? (
           <div>
             <button
-              onClick={() => { setStep('form'); setError(''); localStorage.removeItem('navakha_pending_signup') }}
+              onClick={() => { setStep('form'); setError('') }}
               style={{
                 background: 'none', border: 'none', color: MUTED,
                 cursor: 'pointer', padding: '4px 0', display: 'flex',

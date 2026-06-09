@@ -45,24 +45,13 @@ export function AuthProvider({ children }) {
         setUser(s?.user ?? null)
         if (s?.user) {
           if (_event === 'SIGNED_IN') {
-            const raw = localStorage.getItem('navakha_pending_signup')
-            if (raw) {
-              try {
-                const pending = JSON.parse(raw)
-                if (s.user.email === pending.email) {
-                  localStorage.removeItem('navakha_pending_signup')
-                  if (pending.password) {
-                    await supabase.auth.updateUser({ password: pending.password })
-                  }
-                  const { data: existing } = await supabase.from('profiles').select('id').eq('id', s.user.id).single()
-                  if (!existing) {
-                    await supabase.from('profiles').insert({ id: s.user.id, email: s.user.email, name: pending.name })
-                  } else if (pending.name) {
-                    await supabase.from('profiles').update({ name: pending.name }).eq('id', s.user.id)
-                  }
-                }
-              } catch {}
-            }
+            try {
+              const { data: existing } = await supabase.from('profiles').select('id').eq('id', s.user.id).single()
+              if (!existing) {
+                const name = s.user.user_metadata?.full_name || ''
+                await supabase.from('profiles').insert({ id: s.user.id, email: s.user.email, name })
+              }
+            } catch {}
           }
           refreshProfile(s.user.id)
         } else {

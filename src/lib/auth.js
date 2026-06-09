@@ -1,21 +1,30 @@
 import { supabase } from './supabase'
 
-export async function signUp(email, password, firstName, lastName) {
-  const { data, error } = await supabase.auth.signUp({
+// Signup: step 1 — send 6-digit OTP code to email
+export async function sendSignupOtp(email) {
+  const { error } = await supabase.auth.signInWithOtp({
     email,
-    password,
-    options: {
-      data: { name: `${firstName} ${lastName}`.trim() },
-    },
+    options: { shouldCreateUser: true },
+  })
+  if (error) throw error
+}
+
+// Signup: step 2 — verify code, set password, create profile
+export async function verifySignupCode(email, token, password, name) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'email',
   })
   if (error) throw error
 
-  if (data?.user && !data.session) {
-    // Email confirmation required
-    return { needsConfirmation: true, user: data.user }
-  }
-
   if (data?.user) {
+    // Set password so they can log in with it next time
+    if (password) {
+      await supabase.auth.updateUser({ password })
+    }
+
+    // Create profile row if not already there
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -25,12 +34,14 @@ export async function signUp(email, password, firstName, lastName) {
       await supabase.from('profiles').insert({
         id: data.user.id,
         email: data.user.email,
-        name: `${firstName} ${lastName}`.trim(),
+        name,
       })
+    } else if (name) {
+      await supabase.from('profiles').update({ name }).eq('id', data.user.id)
     }
   }
 
-  return { needsConfirmation: false, user: data?.user }
+  return data
 }
 
 export async function signIn(email, password) {

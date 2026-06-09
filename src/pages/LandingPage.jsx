@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import NavakhaLogo from '../components/NavakhaLogo'
@@ -11,33 +11,62 @@ const TEXT = '#f1f5f9'
 const MUTED = '#94a3b8'
 const SECTION_BG_ALT = '#111827'
 
-// ── Icons ─────────────────────────────────────────────────────────────────────
+// ── Back to top ───────────────────────────────────────────────────────────────
+
+function BackToTop() {
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 400)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+  if (!visible) return null
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      title="Back to top"
+      style={{
+        position: 'fixed', bottom: 32, right: 32, zIndex: 200,
+        background: TEAL, color: 'white',
+        width: 44, height: 44, borderRadius: '50%',
+        border: 'none', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        boxShadow: '0 4px 20px rgba(24,95,165,0.45)',
+        fontSize: 18, fontWeight: 700,
+        transition: 'background 0.15s',
+      }}
+      onMouseOver={(e) => e.currentTarget.style.background = '#0C447C'}
+      onMouseOut={(e) => e.currentTarget.style.background = TEAL}
+    >
+      ↑
+    </button>
+  )
+}
+
+// ── Shared icons ──────────────────────────────────────────────────────────────
 
 function ChatBubbleIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M4 5h20a2 2 0 012 2v12a2 2 0 01-2 2H8l-4 4V7a2 2 0 012-2z"
-        stroke={TEAL} strokeWidth="1.8" strokeLinejoin="round" fill="none"/>
+      <path d="M4 5h20a2 2 0 012 2v12a2 2 0 01-2 2H8l-4 4V7a2 2 0 012-2z" stroke={TEAL} strokeWidth="1.8" strokeLinejoin="round"/>
     </svg>
   )
 }
-
 function DocumentIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <path d="M6 4h11l7 7v17H6V4z" stroke={TEAL} strokeWidth="1.8" strokeLinejoin="round" fill="none"/>
-      <path d="M17 4v7h7" stroke={TEAL} strokeWidth="1.8" strokeLinejoin="round" fill="none"/>
+      <path d="M6 4h11l7 7v17H6V4z" stroke={TEAL} strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M17 4v7h7" stroke={TEAL} strokeWidth="1.8" strokeLinejoin="round"/>
       <line x1="9" y1="15" x2="19" y2="15" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round"/>
       <line x1="9" y1="19" x2="19" y2="19" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   )
 }
-
 function BrainIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="10" cy="10" r="5" stroke={TEAL} strokeWidth="1.8" fill="none"/>
-      <circle cx="18" cy="18" r="5" stroke={TEAL} strokeWidth="1.8" fill="none"/>
+      <circle cx="10" cy="10" r="5" stroke={TEAL} strokeWidth="1.8"/>
+      <circle cx="18" cy="18" r="5" stroke={TEAL} strokeWidth="1.8"/>
       <line x1="14" y1="10" x2="18" y2="13" stroke={TEAL} strokeWidth="1.8" strokeLinecap="round"/>
     </svg>
   )
@@ -60,12 +89,7 @@ function Navbar({ onLogin, onGetStarted }) {
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <button
           onClick={onLogin}
-          style={{
-            padding: '8px 20px', background: 'none',
-            border: `1px solid rgba(255,255,255,0.3)`, borderRadius: 8,
-            color: TEXT, fontSize: 14, fontWeight: 500,
-            cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-          }}
+          style={{ padding: '8px 20px', background: 'none', border: `1px solid rgba(255,255,255,0.3)`, borderRadius: 8, color: TEXT, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
           onMouseOver={(e) => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL }}
           onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'; e.currentTarget.style.color = TEXT }}
         >
@@ -73,11 +97,7 @@ function Navbar({ onLogin, onGetStarted }) {
         </button>
         <button
           onClick={onGetStarted}
-          style={{
-            padding: '8px 20px', background: TEAL, border: 'none', borderRadius: 8,
-            color: 'white', fontSize: 14, fontWeight: 600,
-            cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s',
-          }}
+          style={{ padding: '8px 20px', background: TEAL, border: 'none', borderRadius: 8, color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
           onMouseOver={(e) => e.currentTarget.style.background = '#0C447C'}
           onMouseOut={(e) => e.currentTarget.style.background = TEAL}
         >
@@ -91,9 +111,7 @@ function Navbar({ onLogin, onGetStarted }) {
 function Section({ children, alt = false, id, style = {} }) {
   return (
     <section id={id} style={{ background: alt ? SECTION_BG_ALT : BG, padding: '80px 48px', ...style }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto' }}>
-        {children}
-      </div>
+      <div style={{ maxWidth: 1100, margin: '0 auto' }}>{children}</div>
     </section>
   )
 }
@@ -109,10 +127,7 @@ function SectionHeading({ title, sub }) {
 
 function FeatureCard({ Icon, title, body }) {
   return (
-    <div style={{
-      background: CARD_BG, border: `1px solid ${BORDER}`,
-      borderRadius: 14, padding: '28px 24px', flex: 1,
-    }}>
+    <div style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 14, padding: '28px 24px', flex: 1 }}>
       <div style={{ marginBottom: 16 }}><Icon /></div>
       <h3 style={{ fontSize: 18, fontWeight: 600, color: TEXT, marginBottom: 10 }}>{title}</h3>
       <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65 }}>{body}</p>
@@ -132,24 +147,13 @@ function Step({ number, title, body }) {
 
 function PricingCard({ plan, price, features, ctaLabel, highlighted = false, onCta }) {
   return (
-    <div style={{
-      flex: 1, background: CARD_BG,
-      border: `1.5px solid ${highlighted ? TEAL : BORDER}`,
-      borderRadius: 16, padding: '32px 24px',
-      display: 'flex', flexDirection: 'column', position: 'relative',
-    }}>
+    <div style={{ flex: 1, background: CARD_BG, border: `1.5px solid ${highlighted ? TEAL : BORDER}`, borderRadius: 16, padding: '32px 24px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       {highlighted && (
-        <span style={{
-          position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-          background: TEAL, color: 'white', fontSize: 12, fontWeight: 600,
-          padding: '3px 12px', borderRadius: 999,
-        }}>
+        <span style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: TEAL, color: 'white', fontSize: 12, fontWeight: 600, padding: '3px 12px', borderRadius: 999 }}>
           Most popular
         </span>
       )}
-      <div style={{ marginBottom: 8 }}>
-        <span style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>{plan}</span>
-      </div>
+      <div style={{ marginBottom: 8 }}><span style={{ fontSize: 16, fontWeight: 600, color: TEXT }}>{plan}</span></div>
       <div style={{ marginBottom: 24 }}>
         <span style={{ fontSize: 30, fontWeight: 700, color: TEXT }}>{price}</span>
         <span style={{ color: MUTED, fontSize: 14 }}>/month</span>
@@ -157,27 +161,15 @@ function PricingCard({ plan, price, features, ctaLabel, highlighted = false, onC
       <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', flex: 1 }}>
         {features.map((f, i) => (
           <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 10, color: MUTED, fontSize: 14 }}>
-            <span style={{ color: TEAL, marginTop: 2 }}>✓</span>
-            {f}
+            <span style={{ color: TEAL, marginTop: 2 }}>✓</span>{f}
           </li>
         ))}
       </ul>
       <button
         onClick={onCta}
-        style={{
-          padding: '11px', background: highlighted ? TEAL : 'transparent',
-          border: `1px solid ${highlighted ? TEAL : BORDER}`, borderRadius: 10,
-          color: highlighted ? 'white' : TEXT, fontSize: 14, fontWeight: 600,
-          cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-        }}
-        onMouseOver={(e) => {
-          if (!highlighted) { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL }
-          else e.currentTarget.style.background = '#0C447C'
-        }}
-        onMouseOut={(e) => {
-          if (!highlighted) { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT }
-          else e.currentTarget.style.background = TEAL
-        }}
+        style={{ padding: '11px', background: highlighted ? TEAL : 'transparent', border: `1px solid ${highlighted ? TEAL : BORDER}`, borderRadius: 10, color: highlighted ? 'white' : TEXT, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+        onMouseOver={(e) => { if (!highlighted) { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL } else e.currentTarget.style.background = '#0C447C' }}
+        onMouseOut={(e) => { if (!highlighted) { e.currentTarget.style.borderColor = BORDER; e.currentTarget.style.color = TEXT } else e.currentTarget.style.background = TEAL }}
       >
         {ctaLabel}
       </button>
@@ -185,251 +177,380 @@ function PricingCard({ plan, price, features, ctaLabel, highlighted = false, onC
   )
 }
 
-// ── Interactive demo ───────────────────────────────────────────────────────────
+// ── Demo slide primitives ─────────────────────────────────────────────────────
 
-const DEMO_TABS = [
-  { id: 'chat', label: 'AI Chat', icon: '💬' },
-  { id: 'docs', label: 'Doc Chat', icon: '📄' },
-  { id: 'write', label: 'AI Writing', icon: '✏️' },
-]
-
-const CHAT_MESSAGES = [
-  { role: 'user', text: 'Explain how neural networks learn' },
-  {
-    role: 'ai', text: 'Neural networks learn through a process called **backpropagation**:\n\n1. **Forward pass** — data flows through layers, producing a prediction\n2. **Loss calculation** — how wrong was the prediction?\n3. **Backward pass** — error is propagated back, adjusting weights\n\nThink of it like adjusting a radio dial — each tiny twist brings you closer to the right signal.',
-    replies: [
-      { q: 'What are weights?', a: 'Weights are numeric values on each connection between neurons. They determine how strongly one neuron influences the next.' },
-      { q: 'How many layers?', a: 'A typical deep network has an input layer, several hidden layers (2–100+), and an output layer.' },
-    ]
-  },
-  { role: 'user', text: 'What is the vanishing gradient problem?' },
-  {
-    role: 'ai', text: 'In deep networks, gradients shrink as they travel backward through many layers. By the time they reach early layers, the signal is nearly **zero** — so those layers barely learn.\n\nModern fixes include **ReLU activations**, **batch normalization**, and **residual connections** (skip connections in ResNets).',
-  },
-]
-
-const DOC_BLOCKS = [
-  {
-    title: 'Chapter 3: Photosynthesis',
-    content: 'Photosynthesis is the process by which plants convert light energy into chemical energy stored in glucose. The reaction occurs in the chloroplasts and requires CO₂, H₂O, and sunlight.',
-    hasQuestion: true,
-    question: 'What inputs does photosynthesis need?',
-    answer: 'Photosynthesis needs three inputs: **carbon dioxide (CO₂)** from the air, **water (H₂O)** absorbed by roots, and **sunlight** captured by chlorophyll in the chloroplasts.',
-  },
-  {
-    title: 'Section 3.1: Light Reactions',
-    content: 'The light-dependent reactions occur in the thylakoid membrane. Chlorophyll absorbs photons, energizing electrons that drive ATP synthesis via the electron transport chain.',
-    hasQuestion: false,
-  },
-  {
-    title: 'Section 3.2: Calvin Cycle',
-    content: 'The Calvin cycle takes place in the stroma. It uses ATP and NADPH from the light reactions to fix CO₂ into three-carbon compounds, ultimately producing glucose.',
-    hasQuestion: false,
-  },
-]
-
-const WRITE_EXAMPLE = {
-  original: 'The company made more money this year. Sales went up. Costs went down. Employees worked hard.',
-  suggestions: [
-    { type: 'clarity', text: 'Combine sentences for better flow', revised: 'Revenue grew significantly this year as sales increased and operating costs declined, reflecting strong team performance.' },
-    { type: 'tone', text: 'More professional tone', revised: 'The company achieved strong financial results this fiscal year, driven by increased sales volume and improved cost efficiency.' },
-  ],
-  active: 0,
+function B({ children }) {
+  return <strong style={{ fontWeight: 700 }}>{children}</strong>
 }
 
-function DemoChatTab() {
-  const [openReply, setOpenReply] = useState(null)
-  const [replyInput, setReplyInput] = useState('')
-  const [replyAnswer, setReplyAnswer] = useState(null)
-  const [typing, setTyping] = useState(false)
-
-  const askReply = (q, a) => {
-    setReplyInput(q)
-    setTyping(true)
-    setReplyAnswer(null)
-    setTimeout(() => {
-      setTyping(false)
-      setReplyAnswer(a)
-    }, 1200)
-  }
-
+function UserBubble({ text }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '20px 24px', maxHeight: 420, overflowY: 'auto' }}>
-      {CHAT_MESSAGES.map((msg, i) => (
-        <div key={i}>
-          {msg.role === 'user' ? (
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <div style={{
-                background: TEAL, color: 'white', padding: '10px 14px',
-                borderRadius: '16px 16px 4px 16px', fontSize: 14, maxWidth: '75%',
-              }}>
-                {msg.text}
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
-              <div style={{
-                width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                background: 'linear-gradient(135deg, #185FA5, #1D9E75)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: 'white',
-              }}>N</div>
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  background: '#f8fafc', border: '1px solid #e2e8f0',
-                  borderRadius: '16px 16px 16px 4px', padding: '12px 14px', fontSize: 14, color: '#1e293b',
-                  lineHeight: 1.65,
-                }}>
-                  <DemoMarkdown text={msg.text} />
-                </div>
-                {msg.replies && (
-                  <div style={{ marginTop: 8, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {msg.replies.map((r, ri) => (
-                      <button
-                        key={ri}
-                        onClick={() => { setOpenReply(i); askReply(r.q, r.a) }}
-                        style={{
-                          padding: '5px 12px', background: 'rgba(24,95,165,0.08)',
-                          border: '1px solid rgba(24,95,165,0.25)', borderRadius: 20,
-                          color: TEAL, fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-                        }}
-                      >
-                        ↩ {r.q}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {openReply === i && (
-                  <div style={{
-                    marginTop: 10, background: '#f0f7ff', border: '1px solid #bfdbfe',
-                    borderRadius: 10, padding: '10px 14px',
-                  }}>
-                    <div style={{ fontSize: 12, color: TEAL, fontWeight: 600, marginBottom: 6 }}>Reply thread</div>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-                      <div style={{ background: TEAL, color: 'white', padding: '6px 12px', borderRadius: 12, fontSize: 13 }}>
-                        {replyInput}
-                      </div>
-                    </div>
-                    {typing ? (
-                      <div style={{ display: 'flex', gap: 4, padding: '4px 0' }}>
-                        {[0,1,2].map(d => (
-                          <span key={d} style={{
-                            width: 6, height: 6, borderRadius: '50%', background: MUTED,
-                            animation: `dotPulse 1.2s ${d * 0.2}s ease-in-out infinite`,
-                            display: 'inline-block',
-                          }} />
-                        ))}
-                      </div>
-                    ) : replyAnswer ? (
-                      <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.6 }}>
-                        <DemoMarkdown text={replyAnswer} />
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
+      <div style={{ background: TEAL, color: 'white', padding: '10px 14px', borderRadius: '16px 16px 4px 16px', fontSize: 14, maxWidth: '75%' }}>
+        {text}
+      </div>
+    </div>
+  )
+}
+
+function AIAvatar() {
+  return (
+    <div style={{ width: 30, height: 30, borderRadius: 8, flexShrink: 0, background: 'linear-gradient(135deg, #185FA5, #1D9E75)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white' }}>
+      N
+    </div>
+  )
+}
+
+function CodeBlock({ code }) {
+  return (
+    <pre style={{ background: '#1e293b', borderRadius: 8, padding: '10px 14px', fontSize: 12, color: '#e2e8f0', overflowX: 'auto', margin: '8px 0 0', lineHeight: 1.6, fontFamily: '"Fira Code", "Cascadia Code", monospace' }}>
+      {code}
+    </pre>
+  )
+}
+
+function ReplyButtons({ items, onClickIndex, highlight }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+      {items.map((label, i) => (
+        <button
+          key={i}
+          onClick={() => onClickIndex?.(i)}
+          style={{
+            padding: '5px 12px',
+            background: highlight ? 'rgba(24,95,165,0.12)' : 'rgba(24,95,165,0.06)',
+            border: `1px solid ${highlight ? TEAL : 'rgba(24,95,165,0.25)'}`,
+            borderRadius: 20, color: TEAL, fontSize: 12,
+            cursor: 'pointer', fontFamily: 'inherit',
+            boxShadow: highlight ? `0 0 0 2px rgba(24,95,165,0.2)` : 'none',
+            animation: highlight ? 'replyPulse 2s ease-in-out infinite' : 'none',
+          }}
+        >
+          ↩ {label}
+        </button>
       ))}
     </div>
   )
 }
 
-function DemoDocsTab() {
-  const [expanded, setExpanded] = useState(0)
-  const [asking, setAsking] = useState(false)
+function InlineThread({ question, answer, loading }) {
+  return (
+    <div style={{ marginTop: 10, background: '#f0f7ff', border: `1px solid #bfdbfe`, borderRadius: 10, padding: '10px 14px' }}>
+      <div style={{ fontSize: 11, color: TEAL, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Reply thread
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+        <div style={{ background: TEAL, color: 'white', padding: '6px 12px', borderRadius: '12px 12px 3px 12px', fontSize: 13 }}>
+          {question}
+        </div>
+      </div>
+      {loading ? (
+        <div style={{ display: 'flex', gap: 4, paddingLeft: 2 }}>
+          {[0, 1, 2].map(d => (
+            <span key={d} style={{ width: 6, height: 6, borderRadius: '50%', background: MUTED, display: 'inline-block', animation: `dotPulse 1.2s ${d * 0.2}s ease-in-out infinite` }} />
+          ))}
+        </div>
+      ) : (
+        <div style={{ fontSize: 13, color: '#334155', lineHeight: 1.65 }}>{answer}</div>
+      )}
+    </div>
+  )
+}
+
+// ── AI Chat slides ────────────────────────────────────────────────────────────
+
+function ChatSlide0() {
+  return (
+    <div style={{ padding: '20px 24px' }}>
+      <UserBubble text="How does the internet work?" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px 16px 16px 4px', padding: '12px 14px', fontSize: 14, color: '#1e293b', lineHeight: 1.7 }}>
+            The internet is a global network of computers that communicate using a common language called <B>TCP/IP</B>.<br /><br />
+            When you visit a website:<br />
+            1. Your browser asks a <B>DNS server</B> to convert the domain name to an IP address<br />
+            2. Your request travels through <B>routers</B> across the world<br />
+            3. The destination server sends back the page data<br />
+            4. Your browser <B>renders</B> it into what you see
+          </div>
+          <ReplyButtons items={['What is DNS?', 'What are routers?', 'Explain TCP/IP']} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ChatSlide1() {
+  return (
+    <div style={{ padding: '20px 24px' }}>
+      <UserBubble text="How does the internet work?" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px 16px 16px 4px', padding: '12px 14px', fontSize: 14, color: '#1e293b', lineHeight: 1.7 }}>
+            The internet is a global network of computers that communicate using a common language called <B>TCP/IP</B>.<br /><br />
+            When you visit a website:<br />
+            1. Your browser asks a <B>DNS server</B> to convert the domain name to an IP address<br />
+            2. Your request travels through <B>routers</B> across the world<br />
+            3. The destination server sends back the page data<br />
+            4. Your browser <B>renders</B> it into what you see
+          </div>
+          {/* Highlighted reply buttons */}
+          <ReplyButtons items={['What is DNS?', 'What are routers?', 'Explain TCP/IP']} highlight />
+          <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 11, color: TEAL, fontWeight: 600, background: '#eff6ff', padding: '2px 8px', borderRadius: 10, border: '1px solid #bfdbfe' }}>
+              ↑ Click any reply button to ask about that specific part
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ChatSlide2() {
+  const [open, setOpen] = useState(false)
   const [answered, setAnswered] = useState(false)
 
-  const handleAsk = () => {
-    if (asking || answered) return
-    setAsking(true)
-    setTimeout(() => { setAsking(false); setAnswered(true) }, 1400)
+  const handleClick = () => {
+    if (open) return
+    setOpen(true)
+    setTimeout(() => setAnswered(true), 1300)
   }
 
   return (
-    <div style={{ display: 'flex', gap: 0, height: 420 }}>
-      {/* Doc blocks */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 16px 20px', borderRight: '1px solid #e2e8f0' }}>
-        <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+    <div style={{ padding: '20px 24px' }}>
+      <UserBubble text="How does the internet work?" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px 16px 16px 4px', padding: '12px 14px', fontSize: 14, color: '#1e293b', lineHeight: 1.7 }}>
+            The internet is a global network of computers that communicate using a common language called <B>TCP/IP</B>.<br /><br />
+            1. Your browser asks a <B>DNS server</B> to convert the domain name to an IP address<br />
+            2. Your request travels through <B>routers</B> across the world<br />
+            3. The destination server sends back the page data
+          </div>
+          <ReplyButtons items={['What is DNS?', 'What are routers?']} onClickIndex={handleClick} />
+          {open && (
+            <InlineThread
+              question="What is DNS?"
+              loading={!answered}
+              answer={<>A <B>DNS (Domain Name System)</B> is like the internet's phone book. It translates human-readable domain names like <em>google.com</em> into IP addresses like <em>142.250.80.46</em> that computers use to find each other.</>}
+            />
+          )}
+          {!open && (
+            <div style={{ marginTop: 6, fontSize: 11, color: MUTED }}>
+              ☝️ Click a reply button above to open a thread
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ChatSlide3() {
+  return (
+    <div style={{ padding: '20px 24px', maxHeight: 380, overflowY: 'auto' }}>
+      <UserBubble text="Write Python to check if a number is prime" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px 16px 16px 4px', padding: '12px 14px', fontSize: 14, color: '#1e293b', lineHeight: 1.7 }}>
+            Here's a clean primality check:
+            <CodeBlock code={`def is_prime(n):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
+
+print(is_prime(17))  # True
+print(is_prime(4))   # False`} />
+          </div>
+          <ReplyButtons items={['Make it faster', 'Explain the loop', 'Handle negatives']} highlight />
+        </div>
+      </div>
+      <UserBubble text="Explain the loop" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <InlineThread
+            question="Explain the loop"
+            loading={false}
+            answer={<>We only check divisors up to <B>√n</B>. If n has a factor larger than √n, it must also have one smaller — so we'd have found it already. This cuts the work from O(n) to O(√n).</>}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ChatSlide4() {
+  return (
+    <div style={{ padding: '20px 24px', maxHeight: 380, overflowY: 'auto' }}>
+      <UserBubble text="Explain photosynthesis with an analogy" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px 16px 16px 4px', padding: '12px 14px', fontSize: 14, color: '#1e293b', lineHeight: 1.7 }}>
+            Think of a plant as a <B>solar-powered kitchen</B>:<br /><br />
+            🌞 <B>Sunlight</B> = electricity to power the kitchen<br />
+            💧 <B>Water</B> = water from the tap<br />
+            🌫️ <B>CO₂</B> = ingredients from the air<br />
+            🍬 <B>Glucose</B> = the meal that's cooked<br />
+            🌿 <B>Oxygen</B> = steam/waste released<br /><br />
+            The reaction happens in <B>chloroplasts</B> — the kitchen itself.
+          </div>
+          <ReplyButtons items={['Where are chloroplasts?', 'What is the Calvin cycle?', 'Show the chemical formula']} highlight />
+        </div>
+      </div>
+      <UserBubble text="Show the chemical formula" />
+      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+        <AIAvatar />
+        <div style={{ flex: 1 }}>
+          <InlineThread
+            question="Show the chemical formula"
+            loading={false}
+            answer={<>6CO₂ + 6H₂O + light energy → C₆H₁₂O₆ + 6O₂<br /><br />Six molecules of CO₂ and water are converted into one glucose molecule and six oxygen molecules using light energy.</>}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Doc Chat slides ───────────────────────────────────────────────────────────
+
+const DOC_BLOCKS_DATA = [
+  {
+    title: 'Chapter 3: Photosynthesis',
+    content: 'Photosynthesis is the process by which plants convert light energy into chemical energy stored in glucose. The reaction occurs in the chloroplasts and requires CO₂, H₂O, and sunlight.',
+  },
+  {
+    title: 'Section 3.1: Light Reactions',
+    content: 'The light-dependent reactions occur in the thylakoid membrane. Chlorophyll absorbs photons, energizing electrons that drive ATP synthesis via the electron transport chain.',
+  },
+  {
+    title: 'Section 3.2: Calvin Cycle',
+    content: 'The Calvin cycle takes place in the stroma. It uses ATP and NADPH from the light reactions to fix CO₂ into three-carbon compounds, ultimately producing glucose.',
+  },
+]
+
+function DocBlockItem({ block, expanded, onClick, highlightAsk, onAsk, asked }) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        marginBottom: 8,
+        border: `1px solid ${expanded ? TEAL : '#e2e8f0'}`,
+        borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
+        background: expanded ? '#f0f7ff' : 'white', transition: 'all 0.15s',
+      }}
+    >
+      <div style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{block.title}</span>
+        <span style={{ fontSize: 13, color: expanded ? TEAL : '#94a3b8' }}>{expanded ? '▲' : '▼'}</span>
+      </div>
+      {expanded && (
+        <div style={{ padding: '0 14px 12px', fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
+          {block.content}
+          {highlightAsk && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAsk?.() }}
+              style={{
+                marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 5,
+                padding: '6px 14px',
+                background: asked ? '#dcfce7' : '#eff6ff',
+                border: `1.5px solid ${asked ? '#86efac' : TEAL}`,
+                borderRadius: 20, color: asked ? '#15803d' : TEAL,
+                fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+                animation: !asked ? 'replyPulse 2s ease-in-out infinite' : 'none',
+              }}
+            >
+              {asked ? '✓ Asked' : '💬 Ask about this section'}
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function DocSlide0() {
+  const [exp, setExp] = useState(0)
+  return (
+    <div style={{ padding: '16px 20px', maxHeight: 380, overflowY: 'auto' }}>
+      <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        Biology_Chapter3.pdf · 3 sections
+      </div>
+      {DOC_BLOCKS_DATA.map((b, i) => (
+        <DocBlockItem key={i} block={b} expanded={exp === i} onClick={() => setExp(i)} />
+      ))}
+      <div style={{ marginTop: 10, fontSize: 12, color: MUTED, textAlign: 'center' }}>
+        ☝️ Click any block to expand and read the section
+      </div>
+    </div>
+  )
+}
+
+function DocSlide1() {
+  const [asked, setAsked] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [answered, setAnswered] = useState(false)
+
+  const handleAsk = () => {
+    if (asked) return
+    setAsked(true)
+    setChatOpen(true)
+    setLoading(true)
+    setTimeout(() => { setLoading(false); setAnswered(true) }, 1500)
+  }
+
+  return (
+    <div style={{ display: 'flex', height: 380 }}>
+      {/* Left: doc blocks */}
+      <div style={{ flex: 1, padding: '16px 16px 16px 20px', borderRight: '1px solid #e2e8f0', overflowY: 'auto' }}>
+        <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Biology_Chapter3.pdf
         </div>
-        {DOC_BLOCKS.map((block, i) => (
-          <div
-            key={i}
-            onClick={() => setExpanded(i)}
-            style={{
-              marginBottom: 10, border: `1px solid ${expanded === i ? TEAL : '#e2e8f0'}`,
-              borderRadius: 10, overflow: 'hidden', cursor: 'pointer',
-              background: expanded === i ? '#f0f7ff' : 'white',
-              transition: 'all 0.15s',
-            }}
-          >
-            <div style={{
-              padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{block.title}</span>
-              <span style={{ fontSize: 14, color: expanded === i ? TEAL : '#94a3b8' }}>
-                {expanded === i ? '▲' : '▼'}
-              </span>
-            </div>
-            {expanded === i && (
-              <div style={{ padding: '0 14px 12px', fontSize: 13, color: '#475569', lineHeight: 1.6 }}>
-                {block.content}
-                {block.hasQuestion && (
-                  <div style={{ marginTop: 10 }}>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleAsk() }}
-                      style={{
-                        padding: '5px 12px', background: answered ? '#dcfce7' : 'rgba(24,95,165,0.08)',
-                        border: `1px solid ${answered ? '#86efac' : 'rgba(24,95,165,0.25)'}`,
-                        borderRadius: 20, color: answered ? '#15803d' : TEAL,
-                        fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
-                      }}
-                    >
-                      {asking ? '…' : answered ? '✓ Answered' : '💬 Ask about this section'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))}
+        <DocBlockItem block={DOC_BLOCKS_DATA[0]} expanded highlightAsk onAsk={handleAsk} asked={asked} onClick={() => {}} />
+        <DocBlockItem block={DOC_BLOCKS_DATA[1]} expanded={false} onClick={() => {}} />
+        <DocBlockItem block={DOC_BLOCKS_DATA[2]} expanded={false} onClick={() => {}} />
       </div>
-
-      {/* Sub-chat panel */}
-      <div style={{ width: 260, display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
-        <div style={{ padding: '12px 14px', borderBottom: '1px solid #e2e8f0', fontSize: 12, fontWeight: 600, color: '#475569' }}>
-          Ask about this document
+      {/* Right: sub-chat */}
+      <div style={{ width: 250, display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
+        <div style={{ padding: '10px 14px', borderBottom: '1px solid #e2e8f0', fontSize: 12, fontWeight: 600, color: '#475569' }}>
+          Document Chat
         </div>
         <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {chatOpen && (
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ background: TEAL, color: 'white', padding: '8px 12px', borderRadius: '12px 12px 3px 12px', fontSize: 12, maxWidth: '85%' }}>
+                What inputs does photosynthesis need?
+              </div>
+            </div>
+          )}
+          {loading && (
+            <div style={{ display: 'flex', gap: 4, paddingLeft: 4 }}>
+              {[0,1,2].map(d => <span key={d} style={{ width: 6, height: 6, borderRadius: '50%', background: MUTED, display: 'inline-block', animation: `dotPulse 1.2s ${d * 0.2}s ease-in-out infinite` }} />)}
+            </div>
+          )}
           {answered && (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <div style={{ background: TEAL, color: 'white', padding: '8px 12px', borderRadius: '12px 12px 3px 12px', fontSize: 12, maxWidth: '85%' }}>
-                  {DOC_BLOCKS[0].question}
-                </div>
-              </div>
-              <div style={{ fontSize: 12, color: '#334155', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px 12px 12px 3px', padding: '8px 12px', lineHeight: 1.6 }}>
-                <DemoMarkdown text={DOC_BLOCKS[0].answer} />
-              </div>
-            </>
+            <div style={{ fontSize: 12, color: '#334155', background: 'white', border: '1px solid #e2e8f0', borderRadius: '12px 12px 12px 3px', padding: '8px 12px', lineHeight: 1.6 }}>
+              Photosynthesis needs <strong>CO₂</strong> from the air, <strong>water</strong> absorbed by roots, and <strong>sunlight</strong> captured by chlorophyll.
+            </div>
           )}
         </div>
         <div style={{ padding: '10px 12px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8 }}>
-          <div style={{
-            flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8,
-            padding: '7px 10px', fontSize: 12, color: '#94a3b8',
-          }}>
+          <div style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '7px 10px', fontSize: 12, color: '#94a3b8' }}>
             Ask anything…
           </div>
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%', background: TEAL,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-          }}>
-            <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-              <path d="M8 12V4M4 8l4-4 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: TEAL, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </div>
         </div>
       </div>
@@ -437,132 +558,137 @@ function DemoDocsTab() {
   )
 }
 
-function DemoWriteTab() {
-  const [active, setActive] = useState(0)
-  const [applied, setApplied] = useState(false)
+function DocSlide2() {
+  const [msg, setMsg] = useState('')
+  const [msgs, setMsgs] = useState([
+    { role: 'user', text: 'What inputs does photosynthesis need?' },
+    { role: 'ai', text: 'Photosynthesis needs three inputs: CO₂ from the air, water absorbed by roots, and sunlight captured by chlorophyll in the chloroplasts.' },
+    { role: 'user', text: 'Where does this happen in the cell?' },
+    { role: 'ai', text: 'It happens inside chloroplasts — organelles found mainly in leaf cells. The light reactions occur in the thylakoid membranes, while the Calvin cycle runs in the stroma.' },
+  ])
+
+  const [sending, setSending] = useState(false)
+
+  const handleSend = () => {
+    if (!msg.trim() || sending) return
+    const q = msg.trim()
+    setMsg('')
+    setMsgs(prev => [...prev, { role: 'user', text: q }])
+    setSending(true)
+    setTimeout(() => {
+      setMsgs(prev => [...prev, { role: 'ai', text: 'Great question! I\'ll look at the document to answer that for you.' }])
+      setSending(false)
+    }, 1000)
+  }
 
   return (
-    <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16, height: 420, overflowY: 'auto' }}>
-      <div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Your draft
-        </div>
-        <div style={{
-          background: applied ? '#f0f7ff' : '#f8fafc', border: `1px solid ${applied ? '#bfdbfe' : '#e2e8f0'}`,
-          borderRadius: 10, padding: '12px 14px', fontSize: 14, color: '#334155', lineHeight: 1.7,
-          transition: 'all 0.3s',
-        }}>
-          {applied ? WRITE_EXAMPLE.suggestions[active].revised : WRITE_EXAMPLE.original}
-        </div>
+    <div style={{ display: 'flex', height: 380 }}>
+      <div style={{ flex: 1, padding: '16px 16px 16px 20px', borderRight: '1px solid #e2e8f0', overflowY: 'auto' }}>
+        <div style={{ fontSize: 12, color: MUTED, fontWeight: 600, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Biology_Chapter3.pdf</div>
+        <DocBlockItem block={DOC_BLOCKS_DATA[0]} expanded onClick={() => {}} />
+        <DocBlockItem block={DOC_BLOCKS_DATA[1]} expanded={false} onClick={() => {}} />
+        <DocBlockItem block={DOC_BLOCKS_DATA[2]} expanded={false} onClick={() => {}} />
       </div>
-
-      <div>
-        <div style={{ fontSize: 12, fontWeight: 600, color: MUTED, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          AI Suggestions
+      <div style={{ width: 250, display: 'flex', flexDirection: 'column', background: '#fafafa' }}>
+        <div style={{ padding: '10px 14px', borderBottom: '1px solid #e2e8f0', fontSize: 12, fontWeight: 600, color: '#475569' }}>
+          Document Chat · {msgs.length} messages
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {WRITE_EXAMPLE.suggestions.map((s, i) => (
-            <div
-              key={i}
-              style={{
-                background: active === i ? '#f0f7ff' : 'white',
-                border: `1px solid ${active === i ? TEAL : '#e2e8f0'}`,
-                borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
-                transition: 'all 0.15s',
-              }}
-              onClick={() => { setActive(i); setApplied(false) }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: TEAL,
-                  textTransform: 'uppercase', letterSpacing: '0.05em',
-                }}>
-                  {s.type}
-                </span>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setActive(i); setApplied(true) }}
-                  style={{
-                    padding: '3px 10px', background: applied && active === i ? '#dcfce7' : TEAL,
-                    border: 'none', borderRadius: 20,
-                    color: applied && active === i ? '#15803d' : 'white',
-                    fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  {applied && active === i ? '✓ Applied' : 'Apply'}
-                </button>
-              </div>
-              <div style={{ fontSize: 13, color: '#475569' }}>{s.text}</div>
-              {active === i && (
-                <div style={{ marginTop: 8, fontSize: 13, color: '#334155', fontStyle: 'italic', borderLeft: `3px solid ${TEAL}`, paddingLeft: 10 }}>
-                  "{s.revised}"
-                </div>
-              )}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {msgs.map((m, i) => m.role === 'user' ? (
+            <div key={i} style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={{ background: TEAL, color: 'white', padding: '7px 11px', borderRadius: '11px 11px 3px 11px', fontSize: 12, maxWidth: '85%' }}>{m.text}</div>
             </div>
+          ) : (
+            <div key={i} style={{ fontSize: 12, color: '#334155', background: 'white', border: '1px solid #e2e8f0', borderRadius: '11px 11px 11px 3px', padding: '7px 11px', lineHeight: 1.6 }}>{m.text}</div>
           ))}
+          {sending && (
+            <div style={{ display: 'flex', gap: 4, paddingLeft: 4 }}>
+              {[0,1,2].map(d => <span key={d} style={{ width: 5, height: 5, borderRadius: '50%', background: MUTED, display: 'inline-block', animation: `dotPulse 1.2s ${d * 0.2}s ease-in-out infinite` }} />)}
+            </div>
+          )}
+        </div>
+        <div style={{ padding: '8px 12px', borderTop: '1px solid #e2e8f0', display: 'flex', gap: 8 }}>
+          <input
+            value={msg}
+            onChange={(e) => setMsg(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Ask anything…"
+            style={{ flex: 1, background: 'white', border: '1px solid #e2e8f0', borderRadius: 8, padding: '6px 10px', fontSize: 12, color: '#334155', outline: 'none', fontFamily: 'inherit' }}
+          />
+          <button
+            onClick={handleSend}
+            style={{ width: 28, height: 28, borderRadius: '50%', background: TEAL, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 12V4M4 8l4-4 4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
         </div>
       </div>
     </div>
   )
 }
 
-function DemoMarkdown({ text }) {
-  const parts = text.split(/(\*\*[^*]+\*\*)/)
-  return (
-    <span>
-      {parts.map((part, i) =>
-        part.startsWith('**') && part.endsWith('**')
-          ? <strong key={i}>{part.slice(2, -2)}</strong>
-          : <span key={i}>{part}</span>
-      )}
-    </span>
-  )
-}
+// ── Carousel demo ─────────────────────────────────────────────────────────────
+
+const CHAT_SLIDES = [
+  { label: 'Ask anything', desc: 'Type any question and get a structured, clear answer', Component: ChatSlide0 },
+  { label: 'Reply buttons', desc: 'Every AI response shows reply buttons — ask about specific parts', Component: ChatSlide1 },
+  { label: 'Inline threads', desc: 'Click a reply button to open a thread right below that response', Component: ChatSlide2 },
+  { label: 'Code support', desc: 'Ask coding questions and get syntax-highlighted answers', Component: ChatSlide3 },
+  { label: 'Multi-turn', desc: 'Ask follow-ups and Navakha keeps the full context', Component: ChatSlide4 },
+]
+
+const DOC_SLIDES = [
+  { label: 'Browse sections', desc: 'Your document is split into collapsible sections you can click through', Component: DocSlide0 },
+  { label: 'Ask about any section', desc: 'Click the Ask button on any block to open a sub-chat about it', Component: DocSlide1 },
+  { label: 'Full conversation', desc: 'Continue asking questions — answers stay grounded in your document', Component: DocSlide2 },
+]
 
 function InteractiveDemo() {
   const [tab, setTab] = useState('chat')
+  const [chatIdx, setChatIdx] = useState(0)
+  const [docIdx, setDocIdx] = useState(0)
+
+  const idx = tab === 'chat' ? chatIdx : docIdx
+  const setIdx = tab === 'chat' ? setChatIdx : setDocIdx
+  const slides = tab === 'chat' ? CHAT_SLIDES : DOC_SLIDES
+  const total = slides.length
+  const { label, desc, Component } = slides[idx]
+
+  const prev = () => setIdx(i => Math.max(0, i - 1))
+  const next = () => setIdx(i => Math.min(total - 1, i + 1))
 
   return (
     <div style={{
       background: CARD_BG, border: `1px solid ${BORDER}`,
       borderRadius: 16, overflow: 'hidden',
-      boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+      boxShadow: '0 24px 64px rgba(0,0,0,0.45)',
       maxWidth: 860, margin: '0 auto',
     }}>
       {/* Window chrome */}
-      <div style={{
-        background: '#0d1829', padding: '12px 20px',
-        display: 'flex', alignItems: 'center', gap: 12,
-        borderBottom: `1px solid ${BORDER}`,
-      }}>
+      <div style={{ background: '#0d1829', padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: `1px solid ${BORDER}` }}>
         <div style={{ display: 'flex', gap: 6 }}>
-          {['#ff5f57','#febc2e','#28c840'].map((c) => (
-            <div key={c} style={{ width: 12, height: 12, borderRadius: '50%', background: c }} />
-          ))}
+          {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 12, height: 12, borderRadius: '50%', background: c }} />)}
         </div>
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.06)', borderRadius: 6,
-            padding: '4px 16px', fontSize: 12, color: MUTED,
-          }}>
+          <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 6, padding: '4px 16px', fontSize: 12, color: MUTED }}>
             navakha.vercel.app/app
           </div>
         </div>
       </div>
 
       {/* Tab bar */}
-      <div style={{
-        display: 'flex', background: '#0d1829',
-        borderBottom: `1px solid ${BORDER}`,
-      }}>
-        {DEMO_TABS.map((t) => (
+      <div style={{ display: 'flex', background: '#0d1829', borderBottom: `1px solid ${BORDER}` }}>
+        {[{ id: 'chat', icon: '💬', label: 'AI Chat' }, { id: 'docs', icon: '📄', label: 'Doc Chat' }].map(t => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             style={{
-              padding: '10px 20px', background: 'none', border: 'none',
+              padding: '10px 24px', background: 'none', border: 'none',
               borderBottom: `2px solid ${tab === t.id ? TEAL : 'transparent'}`,
-              color: tab === t.id ? TEAL : MUTED, fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
-              cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              color: tab === t.id ? TEAL : MUTED,
+              fontSize: 13, fontWeight: tab === t.id ? 600 : 400,
+              cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 6,
               transition: 'all 0.15s',
             }}
           >
@@ -571,11 +697,45 @@ function InteractiveDemo() {
         ))}
       </div>
 
-      {/* Content */}
-      <div style={{ background: 'white' }}>
-        {tab === 'chat' && <DemoChatTab />}
-        {tab === 'docs' && <DemoDocsTab />}
-        {tab === 'write' && <DemoWriteTab />}
+      {/* Slide content */}
+      <div style={{ background: 'white', minHeight: 380 }}>
+        <Component key={`${tab}-${idx}`} />
+      </div>
+
+      {/* Navigation bar */}
+      <div style={{
+        background: '#f8fafc', borderTop: '1px solid #e2e8f0',
+        padding: '12px 20px', display: 'flex', alignItems: 'center', gap: 16,
+      }}>
+        {/* Prev/Next */}
+        <button
+          onClick={prev} disabled={idx === 0}
+          style={{ background: 'none', border: `1px solid ${idx === 0 ? '#e2e8f0' : TEAL}`, borderRadius: 8, padding: '6px 14px', color: idx === 0 ? '#94a3b8' : TEAL, fontSize: 13, cursor: idx === 0 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+        >← Prev</button>
+
+        {/* Dots */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 6 }}>
+          {slides.map((_, i) => (
+            <button
+              key={i} onClick={() => setIdx(i)}
+              style={{ width: i === idx ? 20 : 8, height: 8, borderRadius: 4, background: i === idx ? TEAL : '#cbd5e1', border: 'none', cursor: 'pointer', padding: 0, transition: 'all 0.2s' }}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={next} disabled={idx === total - 1}
+          style={{ background: idx === total - 1 ? 'none' : TEAL, border: `1px solid ${idx === total - 1 ? '#e2e8f0' : TEAL}`, borderRadius: 8, padding: '6px 14px', color: idx === total - 1 ? '#94a3b8' : 'white', fontSize: 13, cursor: idx === total - 1 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}
+        >Next →</button>
+      </div>
+
+      {/* Slide label */}
+      <div style={{ background: CARD_BG, padding: '14px 20px', borderTop: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <span style={{ fontSize: 13, fontWeight: 600, color: TEXT }}>{label}</span>
+          <span style={{ fontSize: 13, color: MUTED, marginLeft: 10 }}>{desc}</span>
+        </div>
+        <span style={{ fontSize: 12, color: MUTED }}>{idx + 1} / {total}</span>
       </div>
     </div>
   )
@@ -587,34 +747,15 @@ function PolicyModal({ title, onClose, content }) {
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 400,
-        background: 'rgba(0,0,0,0.7)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 400, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
     >
-      <div style={{
-        background: CARD_BG, border: `1px solid ${BORDER}`,
-        borderRadius: 16, padding: 32, width: '100%', maxWidth: 560,
-        maxHeight: '80vh', display: 'flex', flexDirection: 'column',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      }}>
+      <div style={{ background: CARD_BG, border: `1px solid ${BORDER}`, borderRadius: 16, padding: 32, width: '100%', maxWidth: 560, maxHeight: '80vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 600, color: TEXT, margin: 0 }}>{title}</h2>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: MUTED, cursor: 'pointer', fontSize: 22 }}>×</button>
         </div>
-        <div style={{ overflowY: 'auto', flex: 1, fontSize: 14, color: MUTED, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>
-          {content}
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            marginTop: 20, padding: '11px', background: TEAL, border: 'none', borderRadius: 10,
-            color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}
-        >
-          Close
-        </button>
+        <div style={{ overflowY: 'auto', flex: 1, fontSize: 14, color: MUTED, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{content}</div>
+        <button onClick={onClose} style={{ marginTop: 20, padding: 11, background: TEAL, border: 'none', borderRadius: 10, color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
       </div>
     </div>
   )
@@ -638,24 +779,12 @@ export default function LandingPage() {
   const goSignup = () => navigate('/auth?mode=signup')
 
   return (
-    <div style={{
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-      background: BG, color: TEXT, overflowX: 'hidden',
-    }}>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: BG, color: TEXT, overflowX: 'hidden' }}>
       <Navbar onLogin={goLogin} onGetStarted={goSignup} />
 
       {/* ── Hero ── */}
-      <section style={{
-        minHeight: 'calc(100vh - 64px)',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center', padding: '80px 48px', background: BG,
-      }}>
-        <h1 style={{
-          fontSize: 'clamp(36px, 6vw, 60px)',
-          fontWeight: 700, color: TEXT, lineHeight: 1.15,
-          marginBottom: 20, maxWidth: 700,
-        }}>
+      <section id="hero" style={{ minHeight: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '80px 48px', background: BG }}>
+        <h1 style={{ fontSize: 'clamp(36px, 6vw, 60px)', fontWeight: 700, color: TEXT, lineHeight: 1.15, marginBottom: 20, maxWidth: 700 }}>
           Learn anything.<br />Understand everything.
         </h1>
         <p style={{ fontSize: 18, color: MUTED, maxWidth: 500, lineHeight: 1.6, marginBottom: 40 }}>
@@ -664,11 +793,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 20 }}>
           <button
             onClick={goSignup}
-            style={{
-              padding: '14px 32px', background: TEAL, border: 'none', borderRadius: 10,
-              color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer',
-              fontFamily: 'inherit', transition: 'background 0.15s',
-            }}
+            style={{ padding: '14px 32px', background: TEAL, border: 'none', borderRadius: 10, color: 'white', fontSize: 16, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
             onMouseOver={(e) => e.currentTarget.style.background = '#0C447C'}
             onMouseOut={(e) => e.currentTarget.style.background = TEAL}
           >
@@ -676,29 +801,19 @@ export default function LandingPage() {
           </button>
           <button
             onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
-            style={{
-              padding: '14px 32px', background: 'none',
-              border: `1px solid rgba(255,255,255,0.2)`, borderRadius: 10,
-              color: TEXT, fontSize: 16, fontWeight: 500,
-              cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s',
-            }}
+            style={{ padding: '14px 32px', background: 'none', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: 10, color: TEXT, fontSize: 16, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
             onMouseOver={(e) => e.currentTarget.style.borderColor = TEAL}
             onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'}
           >
             See how it works
           </button>
         </div>
-        <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)' }}>
-          Free to start · No credit card required
-        </p>
+        <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)' }}>Free to start · No credit card required</p>
       </section>
 
       {/* ── Features ── */}
       <Section alt>
-        <SectionHeading
-          title="Everything you need to learn faster"
-          sub="Two powerful modes built for students and researchers"
-        />
+        <SectionHeading title="Everything you need to learn faster" sub="Two powerful modes built for students and researchers" />
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
           <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with streaming responses from Claude and GPT-4." />
           <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section." />
@@ -708,15 +823,24 @@ export default function LandingPage() {
 
       {/* ── How it works ── */}
       <Section id="how-it-works">
-        <SectionHeading
-          title="See it in action"
-          sub="Click around — this is the real Navakha experience"
-        />
+        <SectionHeading title="See it in action" sub="Click the slides and try the demo — this is the real Navakha experience" />
         <InteractiveDemo />
+
         <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', marginTop: 64 }}>
-          <Step number="01" title="Create your account" body="Sign up with your name, email and password. Free plan — no credit card needed." />
+          <Step number="01" title="Create your account" body="Sign up with your name, email and password. Verify with a 6-digit code. Free — no credit card needed." />
           <Step number="02" title="Upload or ask" body="Start a chat or upload a document — PDF, Word, Excel, or text files." />
-          <Step number="03" title="Get answers" body="Receive accurate, contextual answers in seconds. Ask follow-up questions." />
+          <Step number="03" title="Get answers" body="Receive accurate, contextual answers in seconds. Ask follow-up questions anywhere." />
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 48 }}>
+          <button
+            onClick={() => document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{ padding: '11px 28px', background: 'none', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: 10, color: MUTED, fontSize: 14, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s' }}
+            onMouseOver={(e) => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL }}
+            onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = MUTED }}
+          >
+            ↑ Back to top
+          </button>
         </div>
       </Section>
 
@@ -731,55 +855,24 @@ export default function LandingPage() {
       </Section>
 
       {/* ── Footer ── */}
-      <footer style={{
-        background: BG, borderTop: `1px solid ${BORDER}`,
-        padding: '32px 48px', display: 'flex',
-        alignItems: 'center', justifyContent: 'space-between',
-        flexWrap: 'wrap', gap: 16,
-      }}>
+      <footer style={{ background: BG, borderTop: `1px solid ${BORDER}`, padding: '32px 48px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <NavakhaLogo size={24} />
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Navakha</span>
           <span style={{ fontSize: 13, color: MUTED, marginLeft: 8 }}>© 2025 Navakha. All rights reserved.</span>
         </div>
-        <div style={{ fontSize: 13, color: MUTED, display: 'flex', gap: 20, alignItems: 'center' }}>
-          <span
-            onClick={() => setShowTerms(true)}
-            style={{ cursor: 'pointer', textDecoration: 'underline' }}
-            onMouseOver={(e) => e.currentTarget.style.color = TEXT}
-            onMouseOut={(e) => e.currentTarget.style.color = MUTED}
-          >
-            Terms of Service
-          </span>
+        <div style={{ fontSize: 13, color: MUTED, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span onClick={() => setShowTerms(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }} onMouseOver={(e) => e.currentTarget.style.color = TEXT} onMouseOut={(e) => e.currentTarget.style.color = MUTED}>Terms of Service</span>
           <span>·</span>
-          <span
-            onClick={() => setShowPrivacy(true)}
-            style={{ cursor: 'pointer', textDecoration: 'underline' }}
-            onMouseOver={(e) => e.currentTarget.style.color = TEXT}
-            onMouseOut={(e) => e.currentTarget.style.color = MUTED}
-          >
-            Privacy Policy
-          </span>
+          <span onClick={() => setShowPrivacy(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }} onMouseOver={(e) => e.currentTarget.style.color = TEXT} onMouseOut={(e) => e.currentTarget.style.color = MUTED}>Privacy Policy</span>
           <span>·</span>
-          <span>Contact</span>
+          <span onClick={goLogin} style={{ cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.color = TEAL} onMouseOut={(e) => e.currentTarget.style.color = MUTED}>Log in</span>
           <span>·</span>
-          <span
-            onClick={goLogin}
-            style={{ cursor: 'pointer' }}
-            onMouseOver={(e) => e.currentTarget.style.color = TEAL}
-            onMouseOut={(e) => e.currentTarget.style.color = MUTED}
-          >
-            Log in
-          </span>
-          <span>·</span>
-          <span
-            onClick={goSignup}
-            style={{ cursor: 'pointer', color: TEAL, fontWeight: 600 }}
-          >
-            Sign up free →
-          </span>
+          <span onClick={goSignup} style={{ cursor: 'pointer', color: TEAL, fontWeight: 600 }} onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'} onMouseOut={(e) => e.currentTarget.style.opacity = '1'}>Sign up free →</span>
         </div>
       </footer>
+
+      <BackToTop />
 
       {showTerms && <PolicyModal title="Terms of Service" onClose={() => setShowTerms(false)} content={TERMS} />}
       {showPrivacy && <PolicyModal title="Privacy Policy" onClose={() => setShowPrivacy(false)} content={PRIVACY} />}
@@ -788,6 +881,10 @@ export default function LandingPage() {
         @keyframes dotPulse {
           0%, 60%, 100% { opacity: 0.2; transform: scale(0.8); }
           30% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes replyPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(24,95,165,0.35); }
+          50% { box-shadow: 0 0 0 5px rgba(24,95,165,0); }
         }
       `}</style>
     </div>
@@ -804,33 +901,29 @@ By creating an account and using Navakha ("the Service"), you agree to be bound 
 Navakha is an AI-powered tutoring platform that allows users to ask educational questions and receive AI-generated answers. The Service uses third-party AI providers (Anthropic Claude, OpenAI GPT-4).
 
 3. User Accounts
-You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your password and for all activities under your account. You must notify us immediately of any unauthorized use.
+You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your password and for all activities under your account.
 
 4. Acceptable Use
 You agree not to:
 • Use the Service for any unlawful purpose
-• Upload or share content that is harmful, abusive, or violates others' rights
+• Upload content that is harmful or violates others' rights
 • Attempt to reverse-engineer or disrupt the Service
-• Share your account credentials with others
-• Use the Service to generate harmful, misleading, or deceptive content
+• Use the Service to generate harmful or deceptive content
 
 5. AI-Generated Content
-Responses from Navakha are generated by AI and may not always be accurate. Do not rely solely on AI-generated content for critical decisions. Always verify important information from authoritative sources.
+Responses are generated by AI and may not always be accurate. Always verify important information from authoritative sources.
 
-6. Privacy
-Your use of the Service is also governed by our Privacy Policy. Conversation data is stored securely to enable history and sync features.
+6. Free Plan Limits
+Free plan users are limited to 50 messages/month and 3 document uploads. Limits may change with notice.
 
-7. Free Plan Limits
-Free plan users are limited to 50 messages per month and 3 document uploads. These limits may change with notice.
+7. Termination
+We may suspend accounts that violate these terms. You may delete your account at any time.
 
-8. Termination
-We reserve the right to suspend or terminate accounts that violate these terms. You may delete your account at any time.
+8. Limitation of Liability
+Navakha is provided "as is" without warranties. We are not liable for indirect or consequential damages.
 
-9. Limitation of Liability
-Navakha is provided "as is" without warranties of any kind. We are not liable for any indirect, incidental, or consequential damages arising from your use of the Service.
-
-10. Changes to Terms
-We may update these Terms at any time. Continued use after changes constitutes acceptance of the updated Terms.
+9. Changes to Terms
+Continued use after updates constitutes acceptance.
 
 Contact: support@navakha.in`
 
@@ -842,41 +935,29 @@ Last updated: June 2026
 • Conversation data: messages you send and AI responses
 • Document data: files you upload for analysis
 • Usage data: message counts, feature usage
-• Device information: browser type, IP address (for security)
 
 2. How We Use Your Information
-• To provide and improve the AI tutoring Service
+• To provide the AI tutoring Service
 • To authenticate your account and maintain sessions
 • To track usage limits under your plan
-• To improve AI response quality (aggregated, anonymized)
-• To send account-related notifications (no marketing without consent)
+• To send account-related notifications only
 
 3. Data Storage
-Your data is stored securely in Supabase (PostgreSQL) with Row-Level Security enabled. Conversations and documents are tied to your account and not accessible by other users.
+Stored securely in Supabase (PostgreSQL) with Row-Level Security. Your data is not accessible by other users.
 
 4. Third-Party AI Providers
-Your messages are sent to Anthropic (Claude) and/or OpenAI (GPT-4) to generate responses. These providers have their own privacy policies. We do not share your personal identity with AI providers — only the content of messages.
+Messages are sent to Anthropic (Claude) and/or OpenAI (GPT-4). We do not share your personal identity — only message content.
 
-5. Data Retention
-Your conversations and documents are retained until you delete them or your account. You can delete individual conversations or your entire account at any time.
+5. Data Security
+HTTPS encryption in transit. Passwords are hashed. API keys never stored in the browser.
 
-6. Data Security
-We use HTTPS encryption for all data in transit. Passwords are hashed using industry-standard algorithms. API keys and sensitive credentials are never stored in your browser.
+6. Your Rights
+Access, correct, and delete your personal data at any time via your account settings.
 
-7. Your Rights
-You have the right to:
-• Access the personal data we hold about you
-• Correct inaccurate data
-• Delete your account and all associated data
-• Export your conversation history
+7. Cookies
+Session cookies for authentication only. No tracking or advertising cookies.
 
-8. Cookies
-We use session cookies only for authentication. We do not use tracking or advertising cookies.
-
-9. Children's Privacy
-The Service is not directed to children under 13. We do not knowingly collect information from children under 13.
-
-10. Changes to This Policy
-We may update this Privacy Policy. We will notify you of significant changes via email or in-app notification.
+8. Children's Privacy
+Not directed to children under 13.
 
 Contact: support@navakha.in`

@@ -227,6 +227,12 @@ export default function AuthPage() {
               Continue
             </button>
 
+            {error && (
+              <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center', marginTop: 12 }}>
+                {error}
+              </p>
+            )}
+
             <p style={{ fontSize: 13, color: MUTED, textAlign: 'center', marginTop: 16 }}>
               No password needed. We'll email you a code.
             </p>

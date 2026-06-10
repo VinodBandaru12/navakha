@@ -54,55 +54,6 @@ export async function cloudFetchMessages(cloudConvId) {
   return data ?? []
 }
 
-// ── Subchat messages (inline reply threads) ───────────────────────────────────
-
-export async function cloudAddSubchatMessage(cloudConvId, userId, role, content, parentCloudMsgId) {
-  const { data, error } = await supabase
-    .from('messages')
-    .insert({
-      conversation_id:   cloudConvId,
-      user_id:           userId,
-      role,
-      content,
-      parent_message_id: parentCloudMsgId,
-    })
-    .select('id')
-    .single()
-  if (error) throw error
-  return data.id
-}
-
-export async function cloudFetchSubchatMessages(cloudConvId, parentCloudMsgId) {
-  const { data } = await supabase
-    .from('messages')
-    .select('id, role, content, created_at')
-    .eq('conversation_id', cloudConvId)
-    .eq('parent_message_id', parentCloudMsgId)
-    .order('created_at', { ascending: true })
-  return data ?? []
-}
-
-// ── Doc sub-chat (DocSubChat panel) ───────────────────────────────────────────
-
-export async function cloudSaveDocChat(documentId, userId, role, content) {
-  const { data, error } = await supabase
-    .from('doc_chats')
-    .insert({ document_id: String(documentId), user_id: userId, role, content })
-    .select('id')
-    .single()
-  if (error) throw error
-  return data.id
-}
-
-export async function cloudFetchDocChats(documentId) {
-  const { data } = await supabase
-    .from('doc_chats')
-    .select('id, role, content, created_at')
-    .eq('document_id', String(documentId))
-    .order('created_at', { ascending: true })
-  return data ?? []
-}
-
 // ── Cloud document operations ─────────────────────────────────────────────────
 
 export async function cloudFetchDocuments(userId) {

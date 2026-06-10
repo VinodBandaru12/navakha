@@ -206,7 +206,7 @@ router.post('/block/:blockId/ask', authMiddleware, async (req, res) => {
     } else {
       priorContext = await summariseWithMini(
         priorBlocks.map(b => b.content).join('\n\n'),
-        `Summarise this document content into 200 words.
+        `Summarise this document content concisely.
 Preserve all named entities, events, key facts, and story connections.
 A student will use this summary to answer questions about later sections.
 Output only the summary — no preamble.`

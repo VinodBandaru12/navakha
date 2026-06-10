@@ -17,6 +17,7 @@ export async function callAI(systemPrompt, messages, { accessToken, provider, is
       provider: provider || 'anthropic',
       messages: allMessages,
       isSummary,
+      mode: 'doc',
       onDelta: (delta) => { fullText += delta; },
     });
     return { text: fullText };

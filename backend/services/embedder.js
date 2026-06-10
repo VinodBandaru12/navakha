@@ -14,7 +14,7 @@ export async function embedText(text) {
 export async function summariseWithMini(text, systemPrompt) {
   const res = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
-    max_tokens: 400,
+    max_tokens: 1024,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: text },

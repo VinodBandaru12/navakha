@@ -120,7 +120,8 @@ function AppShell() {
   const [searchParams] = useSearchParams();
   const _rawId = searchParams.get('c');
   const activeConversationId = _rawId ? (Number(_rawId) || _rawId) : null;
-  const activeDocumentId = searchParams.get('d') || null;
+  const _rawDocId = searchParams.get('d');
+  const activeDocumentId = _rawDocId ? (Number(_rawDocId) || _rawDocId) : null;
 
   // Mode: URL takes priority over state (d= → document, c= → chat), else state/localStorage
   const [_activeMode, _setActiveMode] = useState(
@@ -148,6 +149,8 @@ function AppShell() {
     _setActiveMode(mode);
     localStorage.setItem('navakha_mode', mode);
     localStorage.setItem('navakha_last_mode', mode);
+    // Clear URL params so activeConversationId/activeDocumentId don't override the mode
+    navigate('/app', { replace: true });
     if (isMobile) setSidebarOpen(false);
   };
 

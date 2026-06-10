@@ -738,7 +738,7 @@ const DOC_SLIDES = [
   { label: 'Browse your document', desc: 'Your document is split into readable sections — scroll and read naturally', Component: DocSlide1 },
 ]
 
-function InteractiveDemo() {
+export function InteractiveDemo() {
   const [tab, setTab] = useState('chat')
   const [chatIdx, setChatIdx] = useState(0)
   const [docIdx, setDocIdx] = useState(0)
@@ -768,14 +768,6 @@ function InteractiveDemo() {
           {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} style={{ width: 11, height: 11, borderRadius: '50%', background: c }} />)}
         </div>
         <div style={{ flex: 1 }} />
-        <button
-          onClick={() => document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' })}
-          style={{ padding: '5px 16px', background: TEAL, border: 'none', borderRadius: 7, color: 'white', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5, transition: 'background 0.15s' }}
-          onMouseOver={(e) => { e.currentTarget.style.background = '#0C447C' }}
-          onMouseOut={(e) => { e.currentTarget.style.background = TEAL }}
-        >
-          ← Back to Launch screen
-        </button>
       </div>
 
       {/* Feature tabs */}
@@ -843,13 +835,6 @@ export default function LandingPage() {
   const { session } = useAuth()
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
-  const [heroNarrow, setHeroNarrow] = useState(window.innerWidth < 640)
-
-  useEffect(() => {
-    const fn = () => setHeroNarrow(window.innerWidth < 640)
-    window.addEventListener('resize', fn)
-    return () => window.removeEventListener('resize', fn)
-  }, [])
 
   useEffect(() => {
     if (session) navigate('/app', { replace: true })
@@ -861,7 +846,7 @@ export default function LandingPage() {
   const goSignup = () => navigate('/auth?mode=signup')
 
   return (
-    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: BG, color: TEXT, overflowX: 'hidden' }}>
+    <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', background: BG, color: TEXT, overflowX: 'clip' }}>
       <Navbar onLogin={goLogin} onGetStarted={goSignup} />
 
       {/* ── Hero ── */}
@@ -878,7 +863,7 @@ export default function LandingPage() {
             onMouseOut={(e) => e.currentTarget.style.background = TEAL}>
             Get started free
           </button>
-          <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+          <button onClick={() => navigate('/demo')}
             style={{ padding: '12px 28px', background: 'none', border: `1px solid rgba(255,255,255,0.2)`, borderRadius: 10, color: TEXT, fontSize: 15, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.15s' }}
             onMouseOver={(e) => e.currentTarget.style.borderColor = TEAL}
             onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'}>
@@ -886,55 +871,12 @@ export default function LandingPage() {
           </button>
         </div>
         <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginBottom: 32 }}>Free to start · No credit card required</p>
-        <div style={heroNarrow ? {
-          display: 'flex', flexDirection: 'column', gap: 14, width: '100%',
-        } : {
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 14, width: '100%', maxWidth: 820,
-        }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 560 }}>
           <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT-4." />
           <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section — or the whole document." />
           <FeatureCard Icon={BrainIcon} title="Smart replies" body="Every response has ↩ reply buttons. Ask about any specific part without scrolling or starting over." />
         </div>
       </section>
-
-      {/* ── How it works ── */}
-      <Section id="how-it-works" wide>
-        <SectionHeading
-          title="See it in action"
-          sub="Explore the features — click the slides to interact"
-        />
-
-        <InteractiveDemo />
-
-        <div style={{ display: 'flex', gap: 0, flexWrap: 'wrap', marginTop: 64 }}>
-          <Step number="01" title="Create your account" body="Sign up free with your email — no credit card needed. You'll get a 6-digit code to verify. Takes under a minute." />
-          <Step number="02" title="Upload or ask" body="Start chatting instantly about any topic, or upload a PDF, Word doc, or text file to study its contents." />
-          <Step number="03" title="Get rich answers" body="Get structured answers with diagrams, charts, and code. Click ↩ reply on any section to dig deeper — no scrolling needed." />
-        </div>
-
-        {/* Prominent back-to-top */}
-        <div style={{ textAlign: 'center', marginTop: 52 }}>
-          <button
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            style={{ padding: '12px 32px', background: 'none', border: `1.5px solid rgba(255,255,255,0.2)`, borderRadius: 10, color: MUTED, fontSize: 14, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s', display: 'inline-flex', alignItems: 'center', gap: 8 }}
-            onMouseOver={(e) => { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.color = TEAL }}
-            onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = MUTED }}
-          >
-            ↑ Back to top — Get started free
-          </button>
-        </div>
-      </Section>
-
-      {/* ── Pricing ── */}
-      <Section alt>
-        <SectionHeading title="Simple pricing" sub="Start free. Upgrade when you need more." />
-        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-          <PricingCard plan="Free" price="₹0" features={['50 messages per month', '3 documents', 'AI Chat + Document Chat']} ctaLabel="Get started free" onCta={goSignup} />
-          <PricingCard plan="Student" price="₹99" features={['500 messages per month', '20 documents', 'Priority responses']} ctaLabel="Start free trial" highlighted onCta={goSignup} />
-          <PricingCard plan="Pro" price="₹249" features={['Unlimited messages', 'Unlimited documents', 'Fastest responses', 'API access (coming soon)']} ctaLabel="Go Pro" onCta={goSignup} />
-        </div>
-      </Section>
 
       {/* ── Footer ── */}
       <footer style={{ background: BG, borderTop: `1px solid ${BORDER}`, padding: '32px clamp(16px, 4vw, 48px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
@@ -960,7 +902,6 @@ export default function LandingPage() {
       {showPrivacy && <PolicyModal title="Privacy Policy" onClose={() => setShowPrivacy(false)} content={PRIVACY} />}
 
       <style>{`
-        html, body { overscroll-behavior-y: none; }
         @keyframes dotPulse { 0%,60%,100%{opacity:.2;transform:scale(.8)} 30%{opacity:1;transform:scale(1)} }
         @keyframes replyPulse {
           0%   { box-shadow: 0 0 0 0 rgba(24,95,165,0.6); background: rgba(24,95,165,0.12); }

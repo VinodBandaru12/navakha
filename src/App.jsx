@@ -9,7 +9,8 @@ import SettingsPanel from './components/SettingsPanel';
 import DocumentPage from './pages/DocumentPage';
 import LandingModeSelect from './components/LandingModeSelect';
 import LandingPage from './pages/LandingPage';
-import AuthPage from './pages/AuthPage';
+import AuthPage from './pages/AuthPage'
+import DemoPage from './pages/DemoPage';
 import OnboardingPage from './pages/OnboardingPage';
 import AuthGuard from './components/AuthGuard';
 import TierInfoModal from './components/TierInfoModal';
@@ -370,6 +371,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/demo" element={<DemoPage />} />
       <Route
         path="/onboarding"
         element={

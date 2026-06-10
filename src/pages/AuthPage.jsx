@@ -303,7 +303,12 @@ export default function AuthPage() {
       await resetPassword(forgotEmail.trim())
       setForgotSent(true)
     } catch (err) {
-      setError(err.message || 'Failed to send reset email. Please try again.')
+      const msg = err.message || ''
+      setError(
+        msg.includes('rate limit') || msg.includes('rate_limit')
+          ? 'Too many requests. Please wait a few minutes and try again.'
+          : 'Failed to send reset email. Please try again.'
+      )
     } finally {
       setLoading(false)
     }

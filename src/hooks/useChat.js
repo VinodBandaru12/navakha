@@ -6,14 +6,17 @@ import {
   getMessagesUpTo,
   getConversation,
   updateConversationSummary,
+  db,
 } from '../db/db';
 import { buildApiMessages } from '../utils/streamParser';
 import { summarizeHistory } from '../utils/summarize';
 import { generateTitle } from '../utils/titleGenerator';
 import { useStreaming } from './useStreaming';
+import { cloudAddMessage } from '../lib/cloudStorage';
+import { useAuth } from '../context/AuthContext';
 
-// Keep the most recent N messages (user+assistant pairs) fresh; summarize the rest.
-const FRESH_WINDOW = 20; // 10 exchanges × 2 messages
+// Summarize in batches: every BATCH_SIZE messages, summarize completed batches, keep the rest fresh.
+const BATCH_SIZE = 10;
 
 export function useChat({ conversationId, provider, apiKey, accessToken, onTitleGenerated }) {
   const [messages, setMessages] = useState([]);
@@ -21,6 +24,8 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState(null);
   const { stream, cancel } = useStreaming();
+  const { user, profile } = useAuth();
+  const isPro = profile?.plan && profile.plan !== 'free';
 
   useEffect(() => {
     if (!conversationId) { setMessages([]); return; }
@@ -42,6 +47,15 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
       parentMessageId,
     });
 
+    // Cloud sync: write user message for Pro users
+    if (isPro && user) {
+      const conv = await getConversation(conversationId);
+      if (conv?.cloudId) {
+        cloudAddMessage(conv.cloudId, user.id, 'user', userText.trim())
+          .catch(e => console.warn('[cloud] addMessage(user) failed:', e));
+      }
+    }
+
     // Determine history to send
     let historyMessages;
     if (truncateAfterMessageId != null) {
@@ -50,16 +64,19 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
       historyMessages = await getMessages(conversationId);
     }
 
-    // Build API payload — apply rolling summary when conversation is long enough
+    // Build API payload — summarize completed 10-message batches, keep the rest fresh
     let apiHistory;
+
+    const completedBatches = Math.floor((historyMessages.length - 1) / BATCH_SIZE);
 
     if (
       accessToken &&
       truncateAfterMessageId == null &&
-      historyMessages.length > FRESH_WINDOW
+      completedBatches >= 1
     ) {
-      const toSummarize = historyMessages.slice(0, historyMessages.length - FRESH_WINDOW);
-      const fresh = historyMessages.slice(historyMessages.length - FRESH_WINDOW);
+      const summarizableCount = completedBatches * BATCH_SIZE;
+      const toSummarize = historyMessages.slice(0, summarizableCount);
+      const fresh = historyMessages.slice(summarizableCount);
 
       // Load cached summary; regenerate only when more messages need summarizing
       const conv = await getConversation(conversationId);
@@ -126,7 +143,18 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
       setStreamingContent('');
     }
 
-    if (fullText) await updateMessageContent(aiMsg.id, fullText);
+    if (fullText) {
+      await updateMessageContent(aiMsg.id, fullText);
+
+      // Cloud sync: write completed AI message for Pro users
+      if (isPro && user) {
+        const conv = await getConversation(conversationId);
+        if (conv?.cloudId) {
+          cloudAddMessage(conv.cloudId, user.id, 'assistant', fullText)
+            .catch(e => console.warn('[cloud] addMessage(assistant) failed:', e));
+        }
+      }
+    }
 
     const finalMessages = await getMessages(conversationId);
     setMessages(finalMessages);

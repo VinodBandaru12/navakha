@@ -73,9 +73,12 @@ function renderContent(type, content) {
 
 // ── DocumentBlock ──────────────────────────────────────────────────────────────
 
+const isTouchDevice = () => window.matchMedia('(hover: none)').matches;
+
 export default function DocumentBlock({ block, onNewQA, onEditBlock }) {
   const [threadOpen, setThreadOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const isTouch = isTouchDevice();
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
@@ -119,7 +122,7 @@ export default function DocumentBlock({ block, onNewQA, onEditBlock }) {
   }, [isEditing]);
 
   const hasThreads = block.threads?.length > 0;
-  const showActions = (hovered || hasThreads || threadOpen) && !isEditing;
+  const showActions = (hovered || hasThreads || threadOpen || isTouch) && !isEditing;
 
   // Badge label / colour
   const badge = block.isEdited

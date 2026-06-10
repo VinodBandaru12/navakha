@@ -19,7 +19,7 @@ export default function DocumentUpload({ onUploaded }) {
     try {
       const result = await uploadDocument(file, {
         accessToken: session?.access_token,
-        isPro: profile?.plan === 'pro',
+        isPro: profile?.plan && profile.plan !== 'free',
       });
       onUploaded(result);
     } catch (e) {

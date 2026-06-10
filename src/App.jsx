@@ -13,6 +13,7 @@ import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
 import AuthGuard from './components/AuthGuard';
 import TierInfoModal from './components/TierInfoModal';
+import UpgradeModal from './components/UpgradeModal';
 import { useAuth } from './context/AuthContext';
 
 const CHIPS = [
@@ -134,6 +135,7 @@ function AppShell() {
     sessionStorage.setItem('navakha_tier_shown', '1');
     return true;
   });
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [activeDocumentId, setActiveDocumentId] = useState(null);
 
   const handleModeChange = (mode) => {
@@ -345,10 +347,17 @@ function AppShell() {
         />
       )}
 
-      {tierModalOpen && profile?.plan !== 'pro' && (
+      {tierModalOpen && (!profile?.plan || profile.plan === 'free') && (
         <TierInfoModal
           onClose={() => setTierModalOpen(false)}
-          onUpgrade={() => { setTierModalOpen(false); setSettingsOpen(true); }}
+          onUpgrade={() => { setTierModalOpen(false); setUpgradeModalOpen(true); }}
+        />
+      )}
+
+      {upgradeModalOpen && (
+        <UpgradeModal
+          onClose={() => setUpgradeModalOpen(false)}
+          onUpgraded={() => setUpgradeModalOpen(false)}
         />
       )}
     </div>

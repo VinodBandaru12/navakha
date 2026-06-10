@@ -8,6 +8,12 @@ db.version(1).stores({
   settings: 'key',
 });
 
+db.version(2).stores({
+  conversations: '++id, title, createdAt, provider, cloudId',
+  messages: '++id, conversationId, parentMessageId, role, timestamp, blockIndex, cloudMsgId',
+  settings: 'key',
+});
+
 // ── Conversations ─────────────────────────────────────────────
 export async function createConversation(title = 'New Chat', provider = 'openai') {
   const id = await db.conversations.add({
@@ -74,6 +80,14 @@ export async function getMessagesUpTo(conversationId, messageId) {
 
 export async function updateConversationSummary(id, contextSummary, summarizedCount) {
   return db.conversations.update(id, { contextSummary, summarizedCount });
+}
+
+export async function setConversationCloudId(id, cloudId) {
+  return db.conversations.update(id, { cloudId });
+}
+
+export async function setMessageCloudId(id, cloudMsgId) {
+  return db.messages.update(id, { cloudMsgId });
 }
 
 // ── Settings ──────────────────────────────────────────────────

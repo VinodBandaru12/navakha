@@ -1,14 +1,14 @@
 import { X, HardDrive, MessageSquare, FileText, Cloud } from 'lucide-react';
 
 const FREE_ITEMS = [
-  { icon: MessageSquare, text: '20 messages per month' },
-  { icon: FileText,      text: '2 documents max' },
-  { icon: HardDrive,     text: 'Chats & documents saved in this browser only' },
+  { icon: MessageSquare, text: '20 messages/month — shared across AI chat & document chat' },
+  { icon: FileText,      text: '2 document uploads max' },
+  { icon: HardDrive,     text: 'Chats saved in this browser only (no cloud sync)' },
 ];
 
 const PRO_ITEMS = [
-  { icon: MessageSquare, text: 'Unlimited messages' },
-  { icon: FileText,      text: 'Unlimited documents' },
+  { icon: MessageSquare, text: 'More messages (limits per plan)' },
+  { icon: FileText,      text: 'Unlimited document uploads' },
   { icon: Cloud,         text: 'Cloud sync — access from any device' },
 ];
 
@@ -85,7 +85,7 @@ export default function TierInfoModal({ onClose, onUpgrade }) {
 
           {/* Pro benefits */}
           <p style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Upgrade to Pro
+            Upgrade — from ₹199/month
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
             {PRO_ITEMS.map(({ icon: Icon, text }) => (
@@ -109,11 +109,11 @@ export default function TierInfoModal({ onClose, onUpgrade }) {
               style={{
                 flex: 1, padding: '11px 0', borderRadius: 10, border: 'none',
                 background: 'linear-gradient(135deg, #185FA5, #1D9E75)',
-                color: 'white', fontWeight: 600, fontSize: 14,
+                color: 'white', fontWeight: 700, fontSize: 14,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}
             >
-              Upgrade to Pro
+              Upgrade — ₹199/month
             </button>
             <button
               onClick={onClose}

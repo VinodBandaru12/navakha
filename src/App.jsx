@@ -182,17 +182,25 @@ function AppShell() {
   };
 
   const handleNewChat = async () => {
-    const conv = await createNew(settings.provider);
-    setConv(conv.id);
-    setPendingMessage('');
-    if (isMobile) setSidebarOpen(false);
+    try {
+      const conv = await createNew(settings.provider);
+      setConv(conv.id);
+      setPendingMessage('');
+      if (isMobile) setSidebarOpen(false);
+    } catch (e) {
+      console.error('[Navakha] createNew failed:', e);
+    }
   };
 
   const handleStart = async (message) => {
-    const conv = await createNew(settings.provider);
-    setConv(conv.id);
-    setPendingMessage(message);
-    if (isMobile) setSidebarOpen(false);
+    try {
+      const conv = await createNew(settings.provider);
+      setConv(conv.id);
+      setPendingMessage(message);
+      if (isMobile) setSidebarOpen(false);
+    } catch (e) {
+      console.error('[Navakha] handleStart failed:', e);
+    }
   };
 
   const handleDeleteConversation = async (id) => {

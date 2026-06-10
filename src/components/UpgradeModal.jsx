@@ -1,6 +1,25 @@
 import { useState } from 'react'
 import { X, CheckCircle, Loader, Zap, Star, Crown } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import { getConversations, getMessages, setConversationCloudId } from '../db/db'
+import { cloudCreateConversation, cloudAddMessage } from '../lib/cloudStorage'
+
+async function migrateLocalToCloud(userId) {
+  const convs = await getConversations()
+  const unsynced = convs.filter(c => !c.cloudId)
+  for (const conv of unsynced) {
+    try {
+      const cloudId = await cloudCreateConversation(userId, conv.title, conv.provider || 'anthropic')
+      await setConversationCloudId(conv.id, cloudId)
+      const msgs = await getMessages(conv.id)
+      for (const m of msgs) {
+        await cloudAddMessage(cloudId, userId, m.role, m.content).catch(() => {})
+      }
+    } catch (e) {
+      console.warn('[cloud] migration skipped for conv', conv.id, e)
+    }
+  }
+}
 
 const TEAL = '#185FA5'
 const GRAD = 'linear-gradient(135deg, #185FA5, #1D9E75)'
@@ -108,6 +127,7 @@ export default function UpgradeModal({ onClose, onUpgraded }) {
             const result = await verifyRes.json()
             if (!verifyRes.ok) throw new Error(result.error || 'Verification failed')
             await refreshProfile()
+            migrateLocalToCloud(user.id).catch(e => console.warn('[cloud] migration error:', e))
             setUpgradedPlanName(plan.name)
             setStep('success')
             onUpgraded?.()

@@ -16,6 +16,14 @@ docDb.version(2).stores({
   block_threads: '++id, blockId, createdAt',
 });
 
+// version 3 — adds doc_chats for DocSubChat persistence (free users)
+docDb.version(3).stores({
+  documents:     '++id, filename, filetype, createdAt',
+  blocks:        '++id, documentId, blockIndex',
+  block_threads: '++id, blockId, createdAt',
+  doc_chats:     '++id, documentId, createdAt',
+});
+
 // ── Documents ─────────────────────────────────────────────────────────────────
 
 export async function createDocument({ filename, filetype, sizeBytes }) {
@@ -55,6 +63,7 @@ export async function removeDocument(id) {
     await docDb.block_threads.where('blockId').anyOf(blockIds).delete();
     await docDb.blocks.where('documentId').equals(id).delete();
   }
+  await docDb.doc_chats.where('documentId').equals(id).delete();
   await docDb.documents.delete(id);
 }
 
@@ -83,7 +92,7 @@ export async function getBlocksBefore(documentId, blockIndex) {
   return all.filter(b => b.blockIndex < blockIndex);
 }
 
-// ── Threads ───────────────────────────────────────────────────────────────────
+// ── Block Threads ─────────────────────────────────────────────────────────────
 
 export async function addThread({ blockId, question, answer, modelUsed }) {
   const id = await docDb.block_threads.add({
@@ -106,4 +115,20 @@ export async function getThreadsByBlockIds(blockIds) {
     (map[t.blockId] ??= []).push(t);
   }
   return map;
+}
+
+// ── Doc Chats (DocSubChat panel — free users / local cache) ───────────────────
+
+export async function addDocChat(documentId, role, content) {
+  const id = await docDb.doc_chats.add({
+    documentId,
+    role,
+    content,
+    createdAt: Date.now(),
+  });
+  return docDb.doc_chats.get(id);
+}
+
+export async function getDocChatsByDocumentId(documentId) {
+  return docDb.doc_chats.where('documentId').equals(documentId).sortBy('createdAt');
 }

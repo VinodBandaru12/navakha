@@ -185,7 +185,7 @@ function IconBtn({ onClick, title, danger, children }) {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export default function BlockThread({ block, onNewQA, onClose }) {
-  const { session, profile } = useAuth();
+  const { session, profile, user } = useAuth();
   const [threads, setThreads] = useState(block.threads ?? []);
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -214,6 +214,7 @@ export default function BlockThread({ block, onNewQA, onClose }) {
       const { answer, model, threadId } = await askBlock(block.id, q, {
         accessToken: session?.access_token,
         provider: profile?.default_provider || 'anthropic',
+        user,
       });
       const qa = { id: threadId, question: q, answer, model_used: model, created_at: new Date().toISOString() };
       setThreads(prev => [...prev, qa]);

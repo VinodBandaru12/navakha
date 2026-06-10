@@ -9,7 +9,10 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false)
+  // Synchronous check: implicit flow puts type=recovery in the URL hash before any async resolves
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(
+    () => window.location.hash.includes('type=recovery')
+  )
 
   const refreshProfile = async (userId) => {
     try {

@@ -140,9 +140,9 @@ function SectionHeading({ title, sub }) {
   )
 }
 
-function FeatureCard({ Icon, title, body }) {
+function FeatureCard({ Icon, title, body, cardStyle = {} }) {
   return (
-    <div style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12, padding: '20px 18px', minWidth: 0 }}>
+    <div style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12, padding: '20px 18px', minWidth: 0, ...cardStyle }}>
       <div style={{ marginBottom: 10 }}><Icon /></div>
       <h3 style={{ fontSize: 'clamp(14px, 1.8vw, 16px)', fontWeight: 600, color: TEXT, marginBottom: 8 }}>{title}</h3>
       <p style={{ fontSize: 'clamp(12px, 1.3vw, 14px)', color: MUTED, lineHeight: 1.6, margin: 0 }}>{body}</p>
@@ -843,6 +843,13 @@ export default function LandingPage() {
   const { session } = useAuth()
   const [showTerms, setShowTerms] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
+  const [heroNarrow, setHeroNarrow] = useState(window.innerWidth < 640)
+
+  useEffect(() => {
+    const fn = () => setHeroNarrow(window.innerWidth < 640)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
 
   useEffect(() => {
     if (session) navigate('/app', { replace: true })
@@ -879,7 +886,12 @@ export default function LandingPage() {
           </button>
         </div>
         <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginBottom: 32 }}>Free to start · No credit card required</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, width: '100%', maxWidth: 820 }}>
+        <div style={heroNarrow ? {
+          display: 'flex', flexDirection: 'column', gap: 14, width: '100%',
+        } : {
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: 14, width: '100%', maxWidth: 820,
+        }}>
           <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT-4." />
           <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section — or the whole document." />
           <FeatureCard Icon={BrainIcon} title="Smart replies" body="Every response has ↩ reply buttons. Ask about any specific part without scrolling or starting over." />
@@ -948,6 +960,7 @@ export default function LandingPage() {
       {showPrivacy && <PolicyModal title="Privacy Policy" onClose={() => setShowPrivacy(false)} content={PRIVACY} />}
 
       <style>{`
+        html, body { overscroll-behavior-y: none; }
         @keyframes dotPulse { 0%,60%,100%{opacity:.2;transform:scale(.8)} 30%{opacity:1;transform:scale(1)} }
         @keyframes replyPulse {
           0%   { box-shadow: 0 0 0 0 rgba(24,95,165,0.6); background: rgba(24,95,165,0.12); }

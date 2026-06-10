@@ -68,7 +68,7 @@ async function summarisePriorBlocks(text, authOpts = {}) {
     const { text: summary } = await callAI(
       `Summarise this document content into 200 words. Preserve named entities, events, key facts, and story connections. Output only the summary — no preamble.`,
       [{ role: 'user', content: text }],
-      authOpts
+      { ...authOpts, isSummary: true }
     );
     return summary;
   } catch {

@@ -19,7 +19,7 @@ export async function resendConfirmation(email) {
 
 export async function resetPassword(email) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/auth?mode=reset`,
+    redirectTo: `${window.location.origin}/auth`,
   })
   if (error) throw error
 }

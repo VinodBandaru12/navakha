@@ -8,7 +8,7 @@ import { streamProxy } from '../utils/streamParser';
  * If accessToken is provided, routes through the /api/chat proxy (production).
  * Falls back to direct API calls if no accessToken (legacy local dev).
  */
-export async function callAI(systemPrompt, messages, { accessToken, provider } = {}) {
+export async function callAI(systemPrompt, messages, { accessToken, provider, isSummary } = {}) {
   if (accessToken) {
     const allMessages = [{ role: 'system', content: systemPrompt }, ...messages];
     let fullText = '';
@@ -16,6 +16,7 @@ export async function callAI(systemPrompt, messages, { accessToken, provider } =
       accessToken,
       provider: provider || 'anthropic',
       messages: allMessages,
+      isSummary,
       onDelta: (delta) => { fullText += delta; },
     });
     return { text: fullText };

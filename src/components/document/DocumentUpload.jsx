@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react';
 import { Upload, AlertCircle } from 'lucide-react';
 import { uploadDocument } from '../../lib/documentApi';
+import { useAuth } from '../../context/AuthContext';
 
 const ACCEPTED = '.pdf,.docx,.txt,.md,.html,.css,.xml,.xlsx,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.cs,.go,.rb,.rs';
 
 export default function DocumentUpload({ onUploaded }) {
+  const { session, profile } = useAuth();
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -15,7 +17,10 @@ export default function DocumentUpload({ onUploaded }) {
     setUploading(true);
     setError(null);
     try {
-      const result = await uploadDocument(file);
+      const result = await uploadDocument(file, {
+        accessToken: session?.access_token,
+        isPro: profile?.plan === 'pro',
+      });
       onUploaded(result);
     } catch (e) {
       setError(e.message);

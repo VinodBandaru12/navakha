@@ -12,6 +12,7 @@ import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
 import OnboardingPage from './pages/OnboardingPage';
 import AuthGuard from './components/AuthGuard';
+import TierInfoModal from './components/TierInfoModal';
 import { useAuth } from './context/AuthContext';
 
 const CHIPS = [
@@ -127,6 +128,12 @@ function AppShell() {
   const [activeMode, setActiveMode] = useState(
     () => profile?.default_mode === 'docs' ? 'document' : (localStorage.getItem('navakha_mode') || 'chat')
   );
+  const [tierModalOpen, setTierModalOpen] = useState(() => {
+    // Show once per browser session for free users
+    if (sessionStorage.getItem('navakha_tier_shown')) return false;
+    sessionStorage.setItem('navakha_tier_shown', '1');
+    return true;
+  });
   const [activeDocumentId, setActiveDocumentId] = useState(null);
 
   const handleModeChange = (mode) => {
@@ -335,6 +342,13 @@ function AppShell() {
           onSettingsChange={(s) => setSettings(s)}
           onClearAll={handleClearAll}
           activeConversationId={activeConversationId}
+        />
+      )}
+
+      {tierModalOpen && profile?.plan !== 'pro' && (
+        <TierInfoModal
+          onClose={() => setTierModalOpen(false)}
+          onUpgrade={() => { setTierModalOpen(false); setSettingsOpen(true); }}
         />
       )}
     </div>

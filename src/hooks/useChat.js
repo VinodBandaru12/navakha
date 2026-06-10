@@ -4,10 +4,16 @@ import {
   addMessage,
   updateMessageContent,
   getMessagesUpTo,
+  getConversation,
+  updateConversationSummary,
 } from '../db/db';
 import { buildApiMessages } from '../utils/streamParser';
+import { summarizeHistory } from '../utils/summarize';
 import { generateTitle } from '../utils/titleGenerator';
 import { useStreaming } from './useStreaming';
+
+// Keep the most recent N messages (user+assistant pairs) fresh; summarize the rest.
+const FRESH_WINDOW = 20; // 10 exchanges × 2 messages
 
 export function useChat({ conversationId, provider, apiKey, accessToken, onTitleGenerated }) {
   const [messages, setMessages] = useState([]);
@@ -16,12 +22,8 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
   const [error, setError] = useState(null);
   const { stream, cancel } = useStreaming();
 
-  // Load messages whenever conversationId changes
   useEffect(() => {
-    if (!conversationId) {
-      setMessages([]);
-      return;
-    }
+    if (!conversationId) { setMessages([]); return; }
     getMessages(conversationId).then(setMessages);
   }, [conversationId]);
 
@@ -40,28 +42,59 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
       parentMessageId,
     });
 
-    // Determine history to send: either truncated or full
+    // Determine history to send
     let historyMessages;
     if (truncateAfterMessageId != null) {
-      // Truncated: get messages up to parent, then append new user message
       historyMessages = await getMessagesUpTo(conversationId, truncateAfterMessageId);
     } else {
-      // Full history: already includes the user message we just saved
       historyMessages = await getMessages(conversationId);
     }
 
-    // For truncated flow the new user msg isn't in historyMessages yet; for
-    // normal flow it IS already there (we saved it above before fetching).
-    const apiHistory = truncateAfterMessageId != null
-      ? [
-          ...historyMessages.map((m) => ({ role: m.role, content: m.content })),
-          { role: 'user', content: userText.trim() },
-        ]
-      : historyMessages.map((m) => ({ role: m.role, content: m.content }));
+    // Build API payload — apply rolling summary when conversation is long enough
+    let apiHistory;
+
+    if (
+      accessToken &&
+      truncateAfterMessageId == null &&
+      historyMessages.length > FRESH_WINDOW
+    ) {
+      const toSummarize = historyMessages.slice(0, historyMessages.length - FRESH_WINDOW);
+      const fresh = historyMessages.slice(historyMessages.length - FRESH_WINDOW);
+
+      // Load cached summary; regenerate only when more messages need summarizing
+      const conv = await getConversation(conversationId);
+      let summary = conv?.contextSummary ?? null;
+      const summarizedCount = conv?.summarizedCount ?? 0;
+
+      if (!summary || summarizedCount < toSummarize.length) {
+        summary = await summarizeHistory(toSummarize, { accessToken, provider });
+        if (summary) {
+          await updateConversationSummary(conversationId, summary, toSummarize.length);
+        }
+      }
+
+      if (summary) {
+        apiHistory = [
+          { role: 'user', content: `[Earlier conversation summary]:\n${summary}` },
+          { role: 'assistant', content: 'Understood, I have the full context.' },
+          ...fresh.map(m => ({ role: m.role, content: m.content })),
+        ];
+      } else {
+        // Fallback: send everything if summarization failed
+        apiHistory = historyMessages.map(m => ({ role: m.role, content: m.content }));
+      }
+    } else if (truncateAfterMessageId != null) {
+      apiHistory = [
+        ...historyMessages.map(m => ({ role: m.role, content: m.content })),
+        { role: 'user', content: userText.trim() },
+      ];
+    } else {
+      apiHistory = historyMessages.map(m => ({ role: m.role, content: m.content }));
+    }
 
     setMessages(await getMessages(conversationId));
 
-    // Create a placeholder AI message in DB
+    // Create placeholder AI message
     const aiMsg = await addMessage({
       conversationId,
       role: 'assistant',
@@ -87,30 +120,22 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
         },
       });
     } catch (e) {
-      if (e.name !== 'AbortError') {
-        setError(e.message);
-      }
+      if (e.name !== 'AbortError') setError(e.message);
     } finally {
       setStreaming(false);
       setStreamingContent('');
     }
 
-    // Persist full AI response
-    if (fullText) {
-      await updateMessageContent(aiMsg.id, fullText);
-    }
+    if (fullText) await updateMessageContent(aiMsg.id, fullText);
 
     const finalMessages = await getMessages(conversationId);
     setMessages(finalMessages);
 
-    // Auto-generate title for new conversations on first message
-    if (finalMessages.filter((m) => m.role === 'user').length === 1) {
+    if (finalMessages.filter(m => m.role === 'user').length === 1) {
       try {
         const title = await generateTitle({ provider, apiKey, accessToken, firstUserMessage: userText });
         onTitleGenerated?.(title);
-      } catch {
-        // ignore title generation errors
-      }
+      } catch { /* ignore */ }
     }
 
     return aiMsg.id;

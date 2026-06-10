@@ -12,6 +12,56 @@ import {
 } from '../db/documentDb';
 import { parseFileInBrowser, generateRenderContent, findRelevantBlocks } from './browserChunker';
 
+// ── Embedding helpers ─────────────────────────────────────────────────────────
+
+async function generateEmbeddings(texts, accessToken) {
+  const res = await fetch('/api/embed', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ texts }),
+  });
+  if (!res.ok) throw new Error('Embedding API failed');
+  const { embeddings } = await res.json();
+  return embeddings;
+}
+
+function cosineSimilarity(a, b) {
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    magA += a[i] * a[i];
+    magB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB);
+  return denom === 0 ? 0 : dot / denom;
+}
+
+/**
+ * Find top-N blocks by cosine similarity when embeddings exist.
+ * Falls back to keyword search when embeddings are missing or the API fails.
+ */
+export async function findBlocksByEmbedding(question, blocks, accessToken, topN = 5) {
+  const withEmbedding = blocks.filter(b => b.embedding);
+  if (!withEmbedding.length || !accessToken) {
+    return findRelevantBlocks(question, blocks, topN);
+  }
+  try {
+    const [queryEmbedding] = await generateEmbeddings([question], accessToken);
+    const scored = withEmbedding.map(b => ({
+      block: b,
+      score: cosineSimilarity(queryEmbedding, b.embedding),
+    }));
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, topN).map(x => x.block);
+  } catch {
+    return findRelevantBlocks(question, blocks, topN);
+  }
+}
+
+// ── Prior-block summariser ─────────────────────────────────────────────────────
 
 async function summarisePriorBlocks(text, authOpts = {}) {
   try {
@@ -34,6 +84,7 @@ function shapeBlock(b, threads = []) {
     index: b.blockIndex,
     type: b.blockType,
     content: b.content,
+    embedding: b.embedding ?? null,
     threads: threads.map(t => ({
       id: t.id,
       question: t.question,
@@ -55,12 +106,26 @@ function shapeDocument(doc) {
   };
 }
 
-// ── Public API — same function signatures as the original backend version ─────
+// ── Public API ─────────────────────────────────────────────────────────────────
 
-export async function uploadDocument(file) {
+/**
+ * Upload a document.
+ * authOpts: { accessToken, isPro }
+ *   - Free users limited to 2 documents.
+ *   - Embeddings generated when accessToken is present.
+ */
+export async function uploadDocument(file, authOpts = {}) {
+  const { accessToken, isPro } = authOpts;
+
   const fileSizeMB = file.size / (1024 * 1024);
-  if (fileSizeMB > 50) {
-    throw new Error('File too large. Maximum 50 MB.');
+  if (fileSizeMB > 50) throw new Error('File too large. Maximum 50 MB.');
+
+  // Free-tier document limit
+  if (!isPro) {
+    const existing = await getAllDocuments();
+    if (existing.length >= 2) {
+      throw new Error('Free plan allows 2 documents. Upgrade to Pro for unlimited.');
+    }
   }
 
   // Parse text blocks + generate visual render content in parallel
@@ -69,17 +134,27 @@ export async function uploadDocument(file) {
     generateRenderContent(file),
   ]);
 
-  const totalBlocks = rawBlocks.length;
-  const truncated = false;
-
   const doc = await createDocument({
     filename: file.name,
     filetype: file.name.split('.').pop().toLowerCase(),
     sizeBytes: file.size,
   });
 
+  // Generate embeddings for all blocks (non-blocking — fall back to keyword if it fails)
+  let embeddings = [];
+  if (accessToken && rawBlocks.length > 0) {
+    try {
+      embeddings = await generateEmbeddings(rawBlocks.map(b => b.content), accessToken);
+    } catch { /* embeddings optional */ }
+  }
+
+  const blocksWithEmbeddings = rawBlocks.map((b, i) => ({
+    ...b,
+    embedding: embeddings[i] ?? null,
+  }));
+
   const [blocks] = await Promise.all([
-    saveBlocks(doc.id, rawBlocks),
+    saveBlocks(doc.id, blocksWithEmbeddings),
     renderContent ? setDocumentRenderContent(doc.id, renderContent) : Promise.resolve(),
   ]);
   await updateDocumentBlockCount(doc.id, blocks.length);
@@ -87,8 +162,8 @@ export async function uploadDocument(file) {
   return {
     documentId: doc.id,
     blockCount: blocks.length,
-    totalBlocks,
-    truncated,
+    totalBlocks: rawBlocks.length,
+    truncated: false,
   };
 }
 
@@ -112,11 +187,9 @@ export async function fetchDocument(id) {
 }
 
 export async function askBlock(blockId, question, authOpts = {}) {
-  // blockId is the Dexie auto-increment integer
   const blk = await docDb.blocks.get(blockId);
   if (!blk) throw new Error('Block not found');
 
-  // Build full story context from all blocks before this one
   const priorBlocks = await getBlocksBefore(blk.documentId, blk.blockIndex);
 
   let priorContext;
@@ -149,18 +222,15 @@ ${question}`;
 
   const thread = await addThread({ blockId, question, answer, modelUsed: model });
 
-  return {
-    answer,
-    model,
-    threadId: thread.id,
-  };
+  return { answer, model, threadId: thread.id };
 }
 
 export async function chatWithDocument(documentId, question, authOpts = {}) {
+  const { accessToken } = authOpts;
   const allBlocks = await getBlocksByDocumentId(documentId);
 
-  // Use keyword relevance to find the most relevant blocks
-  const relevant = findRelevantBlocks(question, allBlocks, 5);
+  // Use vector search when embeddings exist, otherwise fall back to keyword
+  const relevant = await findBlocksByEmbedding(question, allBlocks, accessToken, 5);
   const blockContext = relevant.map(b => b.content).join('\n\n---\n\n');
 
   const { text: answer, model } = await callAI(

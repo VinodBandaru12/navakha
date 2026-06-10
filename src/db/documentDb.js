@@ -67,6 +67,7 @@ export async function saveBlocks(documentId, rawBlocks) {
       blockIndex: i,
       blockType: b.type,
       content: b.content,
+      embedding: b.embedding ?? null,
     })),
     { allKeys: true }
   );

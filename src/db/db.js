@@ -72,6 +72,10 @@ export async function getMessagesUpTo(conversationId, messageId) {
   return all.slice(0, idx + 1);
 }
 
+export async function updateConversationSummary(id, contextSummary, summarizedCount) {
+  return db.conversations.update(id, { contextSummary, summarizedCount });
+}
+
 // ── Settings ──────────────────────────────────────────────────
 export async function getSetting(key) {
   const row = await db.settings.get(key);

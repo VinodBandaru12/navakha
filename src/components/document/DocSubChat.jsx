@@ -1,12 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
-import { ArrowUp, ChevronDown, ChevronUp, ChevronsDown, ChevronsUp } from 'lucide-react';
+import { ArrowUp, ChevronsDown, ChevronsUp } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { callAI } from '../../lib/aiChat';
+import { summarizeHistory } from '../../utils/summarize';
 import { useAuth } from '../../context/AuthContext';
 import { findRelevantBlocks } from '../../lib/browserChunker';
+
+// Keep the most recent 20 doc-chat messages fresh; summarize the rest.
+const FRESH_WINDOW = 20;
 
 const SYSTEM = (docText) =>
   `You are Navakha, a friendly AI tutor helping a student understand a document.
@@ -16,7 +20,7 @@ If the question is unrelated to the document, gently redirect.
 DOCUMENT:
 ${docText}`;
 
-// ── Bubble ────────────────────────────────────────────────────────────────────
+// ── Bubble ─────────────────────────────────────────────────────────────────────
 
 function Bubble({ role, content }) {
   const isUser = role === 'user';
@@ -55,6 +59,9 @@ export default function DocSubChat({ documentId, blocks }) {
   const [error, setError] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
 
+  // Cached summary for rolling window (in-session only — not persisted)
+  const summaryRef = useRef(null); // { text, summarizedCount }
+
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -62,9 +69,8 @@ export default function DocSubChat({ documentId, blocks }) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const getDocText = () => {
+  const getDocText = (q) => {
     if (!blocks?.length) return '';
-    const q = input.trim();
     if (q) {
       const relevant = findRelevantBlocks(
         q,
@@ -89,10 +95,39 @@ export default function DocSubChat({ documentId, blocks }) {
     setLoading(true);
 
     try {
-      const docText = getDocText();
+      // Build the conversation context with rolling summary when needed
+      let conversationCtx = next;
+      const accessToken = session?.access_token;
+
+      if (accessToken && next.length > FRESH_WINDOW) {
+        const toSummarize = next.slice(0, next.length - FRESH_WINDOW);
+        const fresh = next.slice(next.length - FRESH_WINDOW);
+        const cached = summaryRef.current;
+
+        let summaryText = cached?.text ?? null;
+        if (!summaryText || (cached?.summarizedCount ?? 0) < toSummarize.length) {
+          summaryText = await summarizeHistory(toSummarize, {
+            accessToken,
+            provider: profile?.default_provider || 'anthropic',
+          });
+          if (summaryText) {
+            summaryRef.current = { text: summaryText, summarizedCount: toSummarize.length };
+          }
+        }
+
+        if (summaryText) {
+          conversationCtx = [
+            { role: 'user', content: `[Earlier in this conversation]:\n${summaryText}` },
+            { role: 'assistant', content: 'Understood.' },
+            ...fresh,
+          ];
+        }
+      }
+
+      const docText = getDocText(q);
       const { text } = await callAI(
         SYSTEM(docText),
-        next.map(m => ({ role: m.role, content: m.content })),
+        conversationCtx.map(m => ({ role: m.role, content: m.content })),
         { accessToken: session?.access_token, provider: profile?.default_provider || 'anthropic' }
       );
       setMessages(prev => [...prev, { role: 'assistant', content: text }]);
@@ -122,7 +157,6 @@ export default function DocSubChat({ documentId, blocks }) {
       flexShrink: 0,
     }}>
 
-      {/* Sticky bar shown whenever there's content — collapse/expand controls */}
       {hasContent && (
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -150,7 +184,6 @@ export default function DocSubChat({ documentId, blocks }) {
         </div>
       )}
 
-      {/* Messages area — only when there's content and not collapsed */}
       {showPanel && (
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px', position: 'relative' }}>
           <div style={{
@@ -184,7 +217,6 @@ export default function DocSubChat({ documentId, blocks }) {
         </div>
       )}
 
-      {/* Input bar */}
       <div style={{
         padding: '10px 16px 14px',
         borderTop: showPanel ? '1px solid var(--input-border)' : 'none',
@@ -192,50 +224,50 @@ export default function DocSubChat({ documentId, blocks }) {
       }}>
         <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
 
-        <div className="input-card">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              e.target.style.height = 'auto';
-              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-            }}
-            onKeyDown={handleKey}
-            placeholder="Ask anything about this document…"
-            disabled={loading}
-            rows={1}
-            style={{
-              flex: 1, border: 'none', outline: 'none', resize: 'none',
-              fontSize: 15, color: 'var(--text-primary)', background: 'transparent',
-              minHeight: 24, maxHeight: 120, lineHeight: 1.6, fontFamily: 'var(--sans)',
-            }}
-          />
-          <button
-            onClick={send}
-            disabled={!input.trim() || loading}
-            style={{
-              width: 36, height: 36, minWidth: 36,
-              background: input.trim() && !loading ? 'var(--blue-primary)' : 'var(--input-border)',
-              border: 'none', borderRadius: 'var(--radius-full)', color: 'white',
-              cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              alignSelf: 'flex-end', flexShrink: 0,
-              transition: 'all 0.15s ease',
-            }}
-            onMouseOver={(e) => {
-              if (input.trim() && !loading) e.currentTarget.style.background = 'var(--blue-hover)';
-            }}
-            onMouseOut={(e) => {
-              if (input.trim() && !loading) e.currentTarget.style.background = 'var(--blue-primary)';
-            }}
-          >
-            {loading
-              ? <span className="typing-dot" style={{ width: 5, height: 5, margin: 0 }} />
-              : <ArrowUp size={16} strokeWidth={2.5} />
-            }
-          </button>
-        </div>
+          <div className="input-card">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
+              onKeyDown={handleKey}
+              placeholder="Ask anything about this document…"
+              disabled={loading}
+              rows={1}
+              style={{
+                flex: 1, border: 'none', outline: 'none', resize: 'none',
+                fontSize: 15, color: 'var(--text-primary)', background: 'transparent',
+                minHeight: 24, maxHeight: 120, lineHeight: 1.6, fontFamily: 'var(--sans)',
+              }}
+            />
+            <button
+              onClick={send}
+              disabled={!input.trim() || loading}
+              style={{
+                width: 36, height: 36, minWidth: 36,
+                background: input.trim() && !loading ? 'var(--blue-primary)' : 'var(--input-border)',
+                border: 'none', borderRadius: 'var(--radius-full)', color: 'white',
+                cursor: input.trim() && !loading ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                alignSelf: 'flex-end', flexShrink: 0,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseOver={(e) => {
+                if (input.trim() && !loading) e.currentTarget.style.background = 'var(--blue-hover)';
+              }}
+              onMouseOut={(e) => {
+                if (input.trim() && !loading) e.currentTarget.style.background = 'var(--blue-primary)';
+              }}
+            >
+              {loading
+                ? <span className="typing-dot" style={{ width: 5, height: 5, margin: 0 }} />
+                : <ArrowUp size={16} strokeWidth={2.5} />
+              }
+            </button>
+          </div>
 
         </div>
       </div>

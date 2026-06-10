@@ -44,7 +44,7 @@ export default async function handler(req, res) {
   }
 
   const messagesUsed = profile?.messages_used ?? 0
-  const messagesLimit = profile?.messages_limit ?? 50
+  const messagesLimit = profile?.messages_limit ?? 20
 
   if (messagesUsed >= messagesLimit) {
     return res.status(429).json({
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
   }
 
   // 3. Parse request body
-  const { messages, provider, model, systemPrompt } = req.body
+  const { messages, provider, model, systemPrompt, isSummary } = req.body
 
   // 4. Set SSE headers
   res.setHeader('Content-Type', 'text/event-stream')
@@ -102,16 +102,17 @@ export default async function handler(req, res) {
   done()
   res.end()
 
-  // 5. Increment usage
-  await supabase
-    .from('profiles')
-    .update({ messages_used: messagesUsed + 1 })
-    .eq('id', user.id)
+  // 5. Increment usage (skip for internal summarization calls)
+  if (!isSummary) {
+    await supabase
+      .from('profiles')
+      .update({ messages_used: messagesUsed + 1 })
+      .eq('id', user.id)
 
-  // 6. Log usage event
-  await supabase.from('usage_events').insert({
-    user_id: user.id,
-    event_type: 'chat_message',
-    metadata: { provider, model },
-  })
+    await supabase.from('usage_events').insert({
+      user_id: user.id,
+      event_type: 'chat_message',
+      metadata: { provider, model },
+    })
+  }
 }

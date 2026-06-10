@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
 import { FileText, Trash2 } from 'lucide-react';
 import { fetchDocuments, deleteDocument } from '../../lib/documentApi';
+import { useAuth } from '../../context/AuthContext';
 import DocumentUpload from './DocumentUpload';
 
 export default function DocumentSidebar({ activeDocumentId, onSelectDocument }) {
+  const { user, profile } = useAuth();
+  const isPaying = !!(profile?.plan && profile.plan !== 'free');
+
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const reload = () => {
     setLoading(true);
-    fetchDocuments()
+    fetchDocuments({ isPaying, userId: user?.id })
       .then(({ documents: docs }) => setDocuments(docs))
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, []);
+  useEffect(() => { reload(); }, [isPaying, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleUploaded = (result) => {
     reload();
@@ -24,7 +28,7 @@ export default function DocumentSidebar({ activeDocumentId, onSelectDocument }) 
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
-    await deleteDocument(id).catch(() => {});
+    await deleteDocument(id, { user }).catch(() => {});
     setDocuments(prev => prev.filter(d => d.id !== id));
     if (activeDocumentId === id) onSelectDocument(null);
   };

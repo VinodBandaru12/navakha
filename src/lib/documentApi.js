@@ -1,8 +1,9 @@
-// Mode 2 — Document Reader API
-// Uses Dexie (IndexedDB) for storage and calls AI APIs directly from the browser,
-// exactly the same way Mode 1 does. No backend server needed.
+// Document API — branches by plan:
+//   free users  → IndexedDB (Dexie) only, no server storage
+//   paying users → Supabase Storage + Supabase DB (cloud path)
 
 import { callAI } from './aiChat';
+import { supabase } from './supabase';
 import {
   docDb,
   createDocument, updateDocumentBlockCount, setDocumentRenderContent,
@@ -11,6 +12,15 @@ import {
   addThread, getThreadsByBlockIds,
 } from '../db/documentDb';
 import { parseFileInBrowser, generateRenderContent, findRelevantBlocks } from './browserChunker';
+import {
+  cloudFetchDocuments,
+  cloudFetchDocument,
+  cloudDeleteDocument,
+  cloudSaveBlockThread,
+} from './cloudStorage';
+
+// UUID test — cloud documents have UUID IDs; IndexedDB docs have integer IDs
+const isCloudId = (id) => typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
 
 // ── Embedding helpers ─────────────────────────────────────────────────────────
 
@@ -39,10 +49,6 @@ function cosineSimilarity(a, b) {
   return denom === 0 ? 0 : dot / denom;
 }
 
-/**
- * Find top-N blocks by cosine similarity when embeddings exist.
- * Falls back to keyword search when embeddings are missing or the API fails.
- */
 export async function findBlocksByEmbedding(question, blocks, accessToken, topN = 5) {
   const withEmbedding = blocks.filter(b => b.embedding);
   if (!withEmbedding.length || !accessToken) {
@@ -76,21 +82,21 @@ async function summarisePriorBlocks(text, authOpts = {}) {
   }
 }
 
-// ── Shape helpers — normalise Dexie rows to what the UI components expect ────
+// ── Shape helpers ─────────────────────────────────────────────────────────────
 
 function shapeBlock(b, threads = []) {
   return {
     id: b.id,
-    index: b.blockIndex,
-    type: b.blockType,
+    index: b.blockIndex ?? b.block_index,
+    type: b.blockType ?? b.block_type,
     content: b.content,
     embedding: b.embedding ?? null,
     threads: threads.map(t => ({
       id: t.id,
       question: t.question,
       answer: t.answer,
-      model_used: t.modelUsed,
-      created_at: new Date(t.createdAt).toISOString(),
+      model_used: t.modelUsed ?? t.model_used,
+      created_at: t.createdAt ? new Date(t.createdAt).toISOString() : t.created_at,
     })),
   };
 }
@@ -100,35 +106,43 @@ function shapeDocument(doc) {
     id: doc.id,
     filename: doc.filename,
     filetype: doc.filetype,
-    size_bytes: doc.sizeBytes,
-    block_count: doc.blockCount,
-    created_at: new Date(doc.createdAt).toISOString(),
+    size_bytes: doc.sizeBytes ?? doc.size_bytes,
+    block_count: doc.blockCount ?? doc.block_count,
+    created_at: doc.createdAt ? new Date(doc.createdAt).toISOString() : doc.created_at,
+    // renderHtml / rawFileData only exist for IndexedDB docs
+    renderHtml: doc.renderHtml,
+    rawFileData: doc.rawFileData,
   };
 }
 
-// ── Public API ─────────────────────────────────────────────────────────────────
+// ── Upload ────────────────────────────────────────────────────────────────────
 
 /**
  * Upload a document.
- * authOpts: { accessToken, isPro }
- *   - Free users limited to 2 documents.
- *   - Embeddings generated when accessToken is present.
+ * authOpts: { accessToken, isPaying }
+ *   - Free users: IndexedDB only, 2-doc limit.
+ *   - Paying users: Supabase Storage via presigned URL + cloud blocks.
  */
 export async function uploadDocument(file, authOpts = {}) {
-  const { accessToken, isPro } = authOpts;
+  const { accessToken, isPaying } = authOpts;
+
+  if (isPaying && accessToken) {
+    return uploadCloudDocument(file, accessToken);
+  }
+  return uploadLocalDocument(file, authOpts);
+}
+
+async function uploadLocalDocument(file, authOpts = {}) {
+  const { accessToken } = authOpts;
 
   const fileSizeMB = file.size / (1024 * 1024);
   if (fileSizeMB > 50) throw new Error('File too large. Maximum 50 MB.');
 
-  // Free-tier document limit
-  if (!isPro) {
-    const existing = await getAllDocuments();
-    if (existing.length >= 2) {
-      throw new Error('Free plan allows 2 documents. Upgrade to Pro for unlimited.');
-    }
+  const existing = await getAllDocuments();
+  if (existing.length >= 2) {
+    throw new Error('Free plan allows 2 documents. Upgrade to upload more.');
   }
 
-  // Parse text blocks + generate visual render content in parallel
   const [rawBlocks, renderContent] = await Promise.all([
     parseFileInBrowser(file),
     generateRenderContent(file),
@@ -140,12 +154,11 @@ export async function uploadDocument(file, authOpts = {}) {
     sizeBytes: file.size,
   });
 
-  // Generate embeddings for all blocks (non-blocking — fall back to keyword if it fails)
   let embeddings = [];
   if (accessToken && rawBlocks.length > 0) {
     try {
       embeddings = await generateEmbeddings(rawBlocks.map(b => b.content), accessToken);
-    } catch { /* embeddings optional */ }
+    } catch { /* optional */ }
   }
 
   const blocksWithEmbeddings = rawBlocks.map((b, i) => ({
@@ -164,15 +177,115 @@ export async function uploadDocument(file, authOpts = {}) {
     blockCount: blocks.length,
     totalBlocks: rawBlocks.length,
     truncated: false,
+    isCloud: false,
   };
 }
 
-export async function fetchDocuments() {
+async function uploadCloudDocument(file, accessToken) {
+  // ── Step 1: Presign ──────────────────────────────────────────────────────────
+  const presignRes = await fetch('/api/doc-presign', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ filename: file.name, size_bytes: file.size }),
+  });
+
+  if (!presignRes.ok) {
+    const { error } = await presignRes.json().catch(() => ({}));
+    throw new Error(error || 'Failed to get upload URL');
+  }
+
+  const { signedUrl, documentId } = await presignRes.json();
+
+  // ── Step 2: Upload directly to Supabase Storage (bypasses Vercel 4.5 MB limit) ─
+  const uploadRes = await fetch(signedUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
+  });
+
+  if (!uploadRes.ok) {
+    throw new Error('File upload to storage failed');
+  }
+
+  // ── Step 3: Parse blocks in the browser (reuse existing chunker) ──────────────
+  const [rawBlocks, renderContent] = await Promise.all([
+    parseFileInBrowser(file),
+    generateRenderContent(file),
+  ]);
+
+  // ── Step 4: Send blocks to server for embedding + Supabase save ───────────────
+  const processRes = await fetch('/api/doc-process', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      documentId,
+      blocks: rawBlocks.map(b => ({ type: b.type, content: b.content })),
+    }),
+  });
+
+  if (!processRes.ok) {
+    const { error } = await processRes.json().catch(() => ({}));
+    throw new Error(error || 'Block processing failed');
+  }
+
+  const { blockCount } = await processRes.json();
+
+  // ── Step 5: Also cache the visual render in IndexedDB for this device ─────────
+  if (renderContent) {
+    // Store render under a key that links to the cloud document ID
+    try {
+      const doc = await createDocument({
+        filename: file.name,
+        filetype: file.name.split('.').pop().toLowerCase(),
+        sizeBytes: file.size,
+      });
+      await setDocumentRenderContent(doc.id, renderContent);
+      // Tag local record so we know it mirrors the cloud doc
+      await docDb.documents.update(doc.id, { cloudId: documentId });
+    } catch { /* visual cache is non-critical */ }
+  }
+
+  return {
+    documentId,
+    blockCount,
+    totalBlocks: rawBlocks.length,
+    truncated: false,
+    isCloud: true,
+  };
+}
+
+// ── List documents ────────────────────────────────────────────────────────────
+
+export async function fetchDocuments(authOpts = {}) {
+  const { isPaying, userId } = authOpts;
+
+  if (isPaying && userId) {
+    // Cloud: fetch from Supabase
+    const cloudDocs = await cloudFetchDocuments(userId);
+    return { documents: cloudDocs.map(shapeDocument) };
+  }
+
+  // Free: fetch from IndexedDB
   const docs = await getAllDocuments();
   return { documents: docs.map(shapeDocument) };
 }
 
-export async function fetchDocument(id) {
+// ── Fetch single document + blocks + threads ──────────────────────────────────
+
+export async function fetchDocument(id, authOpts = {}) {
+  if (isCloudId(id)) {
+    return fetchCloudDocument(id);
+  }
+  return fetchLocalDocument(id);
+}
+
+async function fetchLocalDocument(id) {
   const doc = await getDocumentById(id);
   if (!doc) throw new Error('Document not found');
 
@@ -186,7 +299,28 @@ export async function fetchDocument(id) {
   };
 }
 
+async function fetchCloudDocument(id) {
+  const result = await cloudFetchDocument(id);
+  if (!result) throw new Error('Document not found');
+
+  const { doc, blocks, threadsByBlockId } = result;
+
+  return {
+    document: shapeDocument(doc),
+    blocks: blocks.map(b => shapeBlock(b, threadsByBlockId[b.id] ?? [])),
+  };
+}
+
+// ── Ask a block ───────────────────────────────────────────────────────────────
+
 export async function askBlock(blockId, question, authOpts = {}) {
+  if (isCloudId(blockId)) {
+    return askCloudBlock(blockId, question, authOpts);
+  }
+  return askLocalBlock(blockId, question, authOpts);
+}
+
+async function askLocalBlock(blockId, question, authOpts = {}) {
   const blk = await docDb.blocks.get(blockId);
   if (!blk) throw new Error('Block not found');
 
@@ -207,16 +341,9 @@ export async function askBlock(blockId, question, authOpts = {}) {
   const systemPrompt = `You are Navakha, a friendly AI tutor.
 The user is reading a document and asked a question while on a specific section.
 Use the full document context provided to answer accurately.
-If the question is genuinely unrelated to the document, say so kindly and offer to help with the document content.`;
+If the question is genuinely unrelated to the document, say so kindly.`;
 
-  const userMessage = `[Story and context so far]:
-${priorContext}
-
-[Section the user is currently reading]:
-${blk.content}
-
-[User's question]:
-${question}`;
+  const userMessage = `[Story and context so far]:\n${priorContext}\n\n[Section the user is currently reading]:\n${blk.content}\n\n[User's question]:\n${question}`;
 
   const { text: answer, model } = await callAI(systemPrompt, [{ role: 'user', content: userMessage }], authOpts);
 
@@ -225,11 +352,77 @@ ${question}`;
   return { answer, model, threadId: thread.id };
 }
 
+async function askCloudBlock(blockId, question, authOpts = {}) {
+  // Fetch block + prior blocks from Supabase
+  const { data: blk } = await supabase
+    .from('blocks')
+    .select('id, document_id, block_index, content')
+    .eq('id', blockId)
+    .single();
+
+  if (!blk) throw new Error('Block not found');
+
+  const { data: priorRows } = await supabase
+    .from('blocks')
+    .select('content')
+    .eq('document_id', blk.document_id)
+    .lt('block_index', blk.block_index)
+    .order('block_index', { ascending: true });
+
+  const priorBlocks = priorRows ?? [];
+
+  let priorContext;
+  if (priorBlocks.length === 0) {
+    priorContext = '(This is the first block — no prior context)';
+  } else if (priorBlocks.length <= 5) {
+    priorContext = priorBlocks.map(b => b.content).join('\n\n');
+  } else {
+    priorContext = await summarisePriorBlocks(
+      priorBlocks.map(b => b.content).join('\n\n'),
+      authOpts
+    );
+  }
+
+  const systemPrompt = `You are Navakha, a friendly AI tutor.
+The user is reading a document and asked a question while on a specific section.
+Use the full document context provided to answer accurately.
+If the question is genuinely unrelated to the document, say so kindly.`;
+
+  const userMessage = `[Story and context so far]:\n${priorContext}\n\n[Section the user is currently reading]:\n${blk.content}\n\n[User's question]:\n${question}`;
+
+  const { text: answer, model } = await callAI(systemPrompt, [{ role: 'user', content: userMessage }], authOpts);
+
+  // Save thread to Supabase
+  const { user } = authOpts;
+  let threadId = null;
+  if (user) {
+    try {
+      threadId = await cloudSaveBlockThread(blockId, blk.document_id, user.id, question, answer, model);
+    } catch (e) {
+      console.warn('[askCloudBlock] thread save failed:', e.message);
+    }
+  }
+
+  return { answer, model, threadId };
+}
+
+// ── Document-level chat (DocSubChat) ──────────────────────────────────────────
+
 export async function chatWithDocument(documentId, question, authOpts = {}) {
   const { accessToken } = authOpts;
-  const allBlocks = await getBlocksByDocumentId(documentId);
 
-  // Use vector search when embeddings exist, otherwise fall back to keyword
+  let allBlocks;
+  if (isCloudId(documentId)) {
+    const { data } = await supabase
+      .from('blocks')
+      .select('id, block_index, content, embedding')
+      .eq('document_id', documentId)
+      .order('block_index', { ascending: true });
+    allBlocks = (data ?? []).map(b => ({ ...b, blockIndex: b.block_index }));
+  } else {
+    allBlocks = await getBlocksByDocumentId(documentId);
+  }
+
   const relevant = await findBlocksByEmbedding(question, allBlocks, accessToken, 5);
   const blockContext = relevant.map(b => b.content).join('\n\n---\n\n');
 
@@ -242,11 +435,18 @@ export async function chatWithDocument(documentId, question, authOpts = {}) {
   return {
     answer,
     model,
-    relevantBlocks: relevant.map(b => b.blockIndex),
+    relevantBlocks: relevant.map(b => b.blockIndex ?? b.index),
   };
 }
 
-export async function deleteDocument(id) {
+// ── Delete document ───────────────────────────────────────────────────────────
+
+export async function deleteDocument(id, authOpts = {}) {
+  if (isCloudId(id)) {
+    const { user } = authOpts;
+    if (user) await cloudDeleteDocument(id, user.id);
+    return { success: true };
+  }
   await removeDocument(id);
   return { success: true };
 }

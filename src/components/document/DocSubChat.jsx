@@ -8,8 +8,9 @@ import { callAI } from '../../lib/aiChat';
 import { summarizeHistory } from '../../utils/summarize';
 import { useAuth } from '../../context/AuthContext';
 import { findRelevantBlocks } from '../../lib/browserChunker';
+import { addDocChat, getDocChatsByDocumentId } from '../../db/documentDb';
+import { cloudSaveDocChat, cloudFetchDocChats } from '../../lib/cloudStorage';
 
-// Keep the most recent 20 doc-chat messages fresh; summarize the rest.
 const FRESH_WINDOW = 20;
 
 const SYSTEM = (docText) =>
@@ -52,18 +53,46 @@ function Bubble({ role, content }) {
 // ── DocSubChat ────────────────────────────────────────────────────────────────
 
 export default function DocSubChat({ documentId, blocks }) {
-  const { session, profile } = useAuth();
+  const { session, profile, user } = useAuth();
+  const isPaying = profile?.plan && profile.plan !== 'free';
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  // Cached summary for rolling window (in-session only — not persisted)
-  const summaryRef = useRef(null); // { text, summarizedCount }
-
+  const summaryRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const inputRef = useRef(null);
+
+  // ── Load chat history on document open ──────────────────────────────────────
+  useEffect(() => {
+    if (!documentId) return;
+    setMessages([]);
+    setHistoryLoaded(false);
+    summaryRef.current = null;
+
+    const load = async () => {
+      try {
+        let history = [];
+        if (isPaying && user) {
+          // Paying users: load from Supabase
+          const cloudMsgs = await cloudFetchDocChats(documentId);
+          history = cloudMsgs.map(m => ({ role: m.role, content: m.content }));
+        } else {
+          // Free users: load from IndexedDB
+          const localMsgs = await getDocChatsByDocumentId(documentId);
+          history = localMsgs.map(m => ({ role: m.role, content: m.content }));
+        }
+        if (history.length) setMessages(history);
+      } catch { /* non-fatal — start fresh */ }
+      setHistoryLoaded(true);
+    };
+
+    load();
+  }, [documentId, isPaying, user]);
 
   useEffect(() => {
     const el = scrollContainerRef.current;
@@ -95,8 +124,14 @@ export default function DocSubChat({ documentId, blocks }) {
     setMessages(next);
     setLoading(true);
 
+    // ── Persist user message ───────────────────────────────────────────────────
+    if (isPaying && user) {
+      cloudSaveDocChat(documentId, user.id, 'user', q).catch(() => {});
+    } else {
+      addDocChat(documentId, 'user', q).catch(() => {});
+    }
+
     try {
-      // Build the conversation context with rolling summary when needed
       let conversationCtx = next;
       const accessToken = session?.access_token;
 
@@ -131,7 +166,16 @@ export default function DocSubChat({ documentId, blocks }) {
         conversationCtx.map(m => ({ role: m.role, content: m.content })),
         { accessToken: session?.access_token, provider: profile?.default_provider || 'anthropic' }
       );
-      setMessages(prev => [...prev, { role: 'assistant', content: text }]);
+
+      const aiMsg = { role: 'assistant', content: text };
+      setMessages(prev => [...prev, aiMsg]);
+
+      // ── Persist AI response ────────────────────────────────────────────────────
+      if (isPaying && user) {
+        cloudSaveDocChat(documentId, user.id, 'assistant', text).catch(() => {});
+      } else {
+        addDocChat(documentId, 'assistant', text).catch(() => {});
+      }
     } catch (e) {
       setError(e.message);
     } finally {

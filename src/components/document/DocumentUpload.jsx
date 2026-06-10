@@ -6,9 +6,12 @@ import { useAuth } from '../../context/AuthContext';
 const ACCEPTED = '.pdf,.docx,.txt,.md,.html,.css,.xml,.xlsx,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.cs,.go,.rb,.rs';
 
 export default function DocumentUpload({ onUploaded }) {
-  const { session, profile } = useAuth();
+  const { session, profile, user } = useAuth();
+  const isPaying = !!(profile?.plan && profile.plan !== 'free');
+
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState('');
   const [error, setError] = useState(null);
   const inputRef = useRef(null);
 
@@ -16,16 +19,21 @@ export default function DocumentUpload({ onUploaded }) {
     if (!file) return;
     setUploading(true);
     setError(null);
+    setProgress(isPaying ? 'Uploading…' : 'Processing…');
+
     try {
       const result = await uploadDocument(file, {
         accessToken: session?.access_token,
-        isPro: profile?.plan && profile.plan !== 'free',
+        isPaying,
+        user,
       });
+      setProgress('');
       onUploaded(result);
     } catch (e) {
       setError(e.message);
     } finally {
       setUploading(false);
+      setProgress('');
     }
   };
 
@@ -53,11 +61,13 @@ export default function DocumentUpload({ onUploaded }) {
         }}
       >
         {uploading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-            <span className="typing-dot" />
-            <span className="typing-dot" />
-            <span className="typing-dot" />
-            <span style={{ fontSize: 12, color: 'var(--sidebar-text)', marginLeft: 4 }}>Uploading…</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+              <span className="typing-dot" />
+            </div>
+            <span style={{ fontSize: 11, color: 'var(--sidebar-text)' }}>{progress}</span>
           </div>
         ) : (
           <>
@@ -66,7 +76,9 @@ export default function DocumentUpload({ onUploaded }) {
               Upload document
             </p>
             <p style={{ fontSize: 11, color: 'var(--sidebar-text)', marginTop: 2, marginBottom: 0 }}>
-              PDF, DOCX, TXT, MD, code…
+              {isPaying
+                ? 'PDF, DOCX, TXT, MD, code… (up to 100 MB)'
+                : 'PDF, DOCX, TXT, MD, code…'}
             </p>
           </>
         )}

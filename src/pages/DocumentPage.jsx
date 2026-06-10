@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FileText, LayoutTemplate, AlignLeft, CheckCircle, Download, RotateCcw } from 'lucide-react';
 import { fetchDocument } from '../lib/documentApi';
+import { useAuth } from '../context/AuthContext';
 import DocumentViewer from '../components/document/DocumentViewer';
 import DocSubChat from '../components/document/DocSubChat';
 import PDFViewer from '../components/document/PDFViewer';
@@ -18,6 +19,7 @@ function enrichBlocks(rawBlocks) {
 }
 
 export default function DocumentPage({ activeDocumentId }) {
+  const { session } = useAuth();
   const [doc, setDoc] = useState(null);
   const [blocks, setBlocks] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -37,7 +39,7 @@ export default function DocumentPage({ activeDocumentId }) {
     if (!activeDocumentId) { setDoc(null); setBlocks([]); return; }
     setLoading(true);
     setError(null);
-    fetchDocument(activeDocumentId)
+    fetchDocument(activeDocumentId, { accessToken: session?.access_token })
       .then(({ document: d, blocks: b }) => {
         setDoc(d);
         setBlocks(enrichBlocks(b));

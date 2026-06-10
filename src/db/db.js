@@ -61,10 +61,12 @@ export async function addMessage({ conversationId, role, content, parentMessageI
 }
 
 export async function getMessages(conversationId) {
-  return db.messages
+  const all = await db.messages
     .where('conversationId')
     .equals(conversationId)
     .sortBy('timestamp');
+  // Only return main thread messages — subchat messages have a parentMessageId set
+  return all.filter(m => !m.parentMessageId);
 }
 
 export async function updateMessageContent(id, content) {
@@ -88,6 +90,14 @@ export async function setConversationCloudId(id, cloudId) {
 
 export async function setMessageCloudId(id, cloudMsgId) {
   return db.messages.update(id, { cloudMsgId });
+}
+
+export async function getSubchatMessages(conversationId, parentMessageId) {
+  const all = await db.messages
+    .where('conversationId')
+    .equals(conversationId)
+    .sortBy('timestamp');
+  return all.filter(m => m.parentMessageId === parentMessageId);
 }
 
 // ── Settings ──────────────────────────────────────────────────

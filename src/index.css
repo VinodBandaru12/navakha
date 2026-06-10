@@ -256,8 +256,9 @@ body {
   padding-left: 12px;
 }
 
-/* ── Mobile: reply buttons always visible ── */
+/* ── Mobile: block action buttons always visible ── */
 @media (max-width: 767px) {
+  .block-actions { opacity: 1 !important; pointer-events: auto !important; }
   .block-reply-btn { opacity: 1 !important; pointer-events: auto !important; }
   .chat-textarea { min-height: 48px !important; }
 }

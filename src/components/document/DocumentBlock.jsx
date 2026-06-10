@@ -216,14 +216,17 @@ export default function DocumentBlock({ block, onNewQA, onEditBlock }) {
           renderContent(block.type, displayed)
         )}
 
-        {/* Action buttons — appear on hover */}
-        <div style={{
-          position: 'absolute', right: 10, top: 10,
-          display: 'flex', alignItems: 'center', gap: 4,
-          opacity: showActions ? 1 : 0,
-          pointerEvents: showActions ? 'auto' : 'none',
-          transition: 'opacity 0.15s ease',
-        }}>
+        {/* Action buttons — appear on hover / always on touch */}
+        <div
+          className="block-actions"
+          style={{
+            position: 'absolute', right: 10, top: 10,
+            display: 'flex', alignItems: 'center', gap: 4,
+            opacity: showActions ? 1 : 0,
+            pointerEvents: showActions ? 'auto' : 'none',
+            transition: 'opacity 0.15s ease',
+          }}
+        >
           {/* Edit (pencil) button */}
           <button
             onClick={startEditing}

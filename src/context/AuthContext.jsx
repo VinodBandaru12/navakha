@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { getProfile } from '../lib/auth'
 
@@ -10,9 +10,8 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   // Synchronous check: implicit flow puts type=recovery in the URL hash before any async resolves
-  const [isPasswordRecovery, setIsPasswordRecovery] = useState(
-    () => window.location.hash.includes('type=recovery')
-  )
+  const recoveryActive = useRef(window.location.hash.includes('type=recovery'))
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(recoveryActive.current)
 
   const refreshProfile = async (userId) => {
     try {
@@ -38,11 +37,19 @@ export function AuthProvider({ children }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, s) => {
         if (_event === 'PASSWORD_RECOVERY') {
+          recoveryActive.current = true
           setIsPasswordRecovery(true)
           setSession(s)
           setUser(s?.user ?? null)
           return
         }
+        // SIGNED_IN fires immediately after PASSWORD_RECOVERY — don't reset recovery mode
+        if (_event === 'SIGNED_IN' && recoveryActive.current) {
+          setSession(s)
+          setUser(s?.user ?? null)
+          return
+        }
+        recoveryActive.current = false
         setIsPasswordRecovery(false)
         setSession(s)
         setUser(s?.user ?? null)

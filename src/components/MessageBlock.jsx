@@ -371,26 +371,23 @@ export default function MessageBlock({ block, blockIndex, isLastBlock, totalBloc
               title="Reply to this section"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 4,
-                fontSize: 12, color: '#64748b',
+                fontSize: 12, color: '#94a3b8',
                 padding: '3px 10px',
                 borderRadius: 999,
-                border: '1px solid #e2e8f0',
-                background: 'transparent',
+                border: '1px solid rgba(148,163,184,0.45)',
+                background: 'rgba(255,255,255,0.07)',
                 cursor: 'pointer',
-                opacity: 0.7,
                 transition: 'all 0.15s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#185FA5';
+                e.currentTarget.style.color = '#60a5fa';
                 e.currentTarget.style.borderColor = '#185FA5';
-                e.currentTarget.style.background = '#E6F1FB';
-                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.background = 'rgba(24,95,165,0.18)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#64748b';
-                e.currentTarget.style.borderColor = '#e2e8f0';
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.opacity = '0.7';
+                e.currentTarget.style.color = '#94a3b8';
+                e.currentTarget.style.borderColor = 'rgba(148,163,184,0.45)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.07)';
               }}
             >
               <CornerDownLeft size={12} />

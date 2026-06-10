@@ -233,20 +233,20 @@ export default function DocumentBlock({ block, onNewQA, onEditBlock }) {
             title="Edit this block"
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              width: 26, height: 26, background: 'white',
-              border: '1px solid var(--input-border)',
+              width: 26, height: 26, background: '#e2e8f0',
+              border: '1px solid #94a3b8',
               borderRadius: 'var(--radius-full)',
-              color: 'var(--text-secondary)', cursor: 'pointer',
+              color: '#334155', cursor: 'pointer',
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.background = '#dbeafe';
-              e.currentTarget.style.color = 'var(--blue-primary)';
-              e.currentTarget.style.borderColor = '#bfdbfe';
+              e.currentTarget.style.background = '#185FA5';
+              e.currentTarget.style.color = 'white';
+              e.currentTarget.style.borderColor = '#185FA5';
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.background = 'white';
-              e.currentTarget.style.color = 'var(--text-secondary)';
-              e.currentTarget.style.borderColor = 'var(--input-border)';
+              e.currentTarget.style.background = '#e2e8f0';
+              e.currentTarget.style.color = '#334155';
+              e.currentTarget.style.borderColor = '#94a3b8';
             }}
           >
             <Pencil size={11} />
@@ -260,12 +260,26 @@ export default function DocumentBlock({ block, onNewQA, onEditBlock }) {
             style={{
               display: 'flex', alignItems: 'center', gap: 4,
               padding: '3px 8px',
-              background: threadOpen ? 'var(--blue-primary)' : 'white',
-              border: `1px solid ${threadOpen ? 'var(--blue-primary)' : 'var(--input-border)'}`,
+              background: threadOpen ? 'var(--blue-primary)' : '#e2e8f0',
+              border: `1px solid ${threadOpen ? 'var(--blue-primary)' : '#94a3b8'}`,
               borderRadius: 'var(--radius-full)',
-              color: threadOpen ? 'white' : 'var(--text-secondary)',
-              fontSize: 11, fontWeight: 500, fontFamily: 'var(--sans)',
+              color: threadOpen ? 'white' : '#334155',
+              fontSize: 11, fontWeight: 600, fontFamily: 'var(--sans)',
               cursor: 'pointer', whiteSpace: 'nowrap',
+            }}
+            onMouseOver={(e) => {
+              if (!threadOpen) {
+                e.currentTarget.style.background = '#185FA5';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.borderColor = '#185FA5';
+              }
+            }}
+            onMouseOut={(e) => {
+              if (!threadOpen) {
+                e.currentTarget.style.background = '#e2e8f0';
+                e.currentTarget.style.color = '#334155';
+                e.currentTarget.style.borderColor = '#94a3b8';
+              }
             }}
           >
             <MessageSquare size={11} />

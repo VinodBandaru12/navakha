@@ -17,7 +17,8 @@ export async function summarizeHistory(messages, { accessToken, provider = 'anth
   try {
     await streamProxy({
       accessToken,
-      provider,
+      provider: 'openai',      // always GPT for cheap summarisation
+      model: 'gpt-4o-mini',
       isSummary: true,
       messages: [
         { role: 'system', content: SUMMARY_PROMPT },

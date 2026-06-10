@@ -206,7 +206,7 @@ export async function streamOpenAI({ apiKey, model = 'gpt-4o', messages, onDelta
  * onDelta(text) called for each chunk.
  * Returns full accumulated response text.
  */
-export async function streamProxy({ accessToken, provider = 'anthropic', messages, onDelta, signal, isSummary }) {
+export async function streamProxy({ accessToken, provider = 'anthropic', model, messages, onDelta, signal, isSummary }) {
   const systemMsg = messages.find((m) => m.role === 'system')?.content ?? ''
   const userMessages = messages.filter((m) => m.role !== 'system')
 
@@ -216,7 +216,7 @@ export async function streamProxy({ accessToken, provider = 'anthropic', message
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ messages: userMessages, provider, systemPrompt: systemMsg, isSummary }),
+    body: JSON.stringify({ messages: userMessages, provider, model, systemPrompt: systemMsg, isSummary }),
     signal,
   })
 

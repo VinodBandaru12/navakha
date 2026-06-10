@@ -56,6 +56,16 @@ export default async function handler(req, res) {
   // 3. Parse request body
   const { messages, provider, model, systemPrompt, isSummary } = req.body
 
+  const resolvedModel = provider === 'anthropic'
+    ? (model || 'claude-haiku-4-5-20251001')
+    : (model || 'gpt-4o-mini')
+
+  console.log(
+    `[chat] user=${user.id.slice(0,8)} provider=${provider} model=${resolvedModel}` +
+    ` msgs=${messages?.length ?? 0} isSummary=${!!isSummary}` +
+    ` usage=${messagesUsed}/${messagesLimit}`
+  )
+
   // 4. Set SSE headers
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
@@ -69,7 +79,7 @@ export default async function handler(req, res) {
     if (provider === 'anthropic') {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
       const stream = await client.messages.create({
-        model: model || 'claude-sonnet-4-6',
+        model: resolvedModel,
         max_tokens: 8096,
         system: systemPrompt,
         messages,
@@ -84,7 +94,7 @@ export default async function handler(req, res) {
     } else {
       const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
       const stream = await client.chat.completions.create({
-        model: model || 'gpt-4o',
+        model: resolvedModel,
         messages: systemPrompt
           ? [{ role: 'system', content: systemPrompt }, ...messages]
           : messages,

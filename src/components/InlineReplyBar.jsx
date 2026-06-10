@@ -6,7 +6,7 @@ export default function InlineReplyBar({ onSubmit, onClose }) {
   const textareaRef = useRef(null);
 
   useEffect(() => {
-    textareaRef.current?.focus();
+    textareaRef.current?.focus({ preventScroll: true });
   }, []);
 
   const handleKeyDown = (e) => {

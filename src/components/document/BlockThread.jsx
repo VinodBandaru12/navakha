@@ -50,7 +50,7 @@ function MiniAIMsg({ content }) {
 
 // ── Thread body ────────────────────────────────────────────────────────────────
 
-function ThreadBody({ threads, loading, error, endRef }) {
+function ThreadBody({ threads, loading, error }) {
   return (
     <>
       {threads.length === 0 && !loading && (
@@ -89,7 +89,6 @@ function ThreadBody({ threads, loading, error, endRef }) {
       {error && (
         <p style={{ fontSize: 12, color: '#ef4444', textAlign: 'center' }}>{error}</p>
       )}
-      <div ref={endRef} />
     </>
   );
 }
@@ -98,7 +97,7 @@ function ThreadBody({ threads, loading, error, endRef }) {
 
 function InputRow({ text, setText, onSend, loading, isExpanded, focusOnMount }) {
   const ref = useRef(null);
-  useEffect(() => { if (focusOnMount) ref.current?.focus(); }, []); // eslint-disable-line
+  useEffect(() => { if (focusOnMount) ref.current?.focus({ preventScroll: true }); }, []); // eslint-disable-line
 
   const sz = isExpanded ? 48 : 40;
 
@@ -192,13 +191,15 @@ export default function BlockThread({ block, onNewQA, onClose }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expanded, setExpanded] = useState(false);
-  const inlineEndRef = useRef(null);
-  const overlayEndRef = useRef(null);
+  const inlineScrollRef = useRef(null);
+  const overlayScrollRef = useRef(null);
 
   const scrollEnd = () => {
     setTimeout(() => {
-      inlineEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      overlayEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      const il = inlineScrollRef.current;
+      if (il) il.scrollTop = il.scrollHeight;
+      const ov = overlayScrollRef.current;
+      if (ov) ov.scrollTop = ov.scrollHeight;
     }, 50);
   };
 
@@ -270,14 +271,12 @@ export default function BlockThread({ block, onNewQA, onClose }) {
       animation: 'slideDown 0.2s ease-out',
     }}>
       {header(false)}
-      <div style={{
+      <div ref={inlineScrollRef} style={{
         maxHeight: 320, overflowY: 'auto',
         padding: '12px 16px',
         display: 'flex', flexDirection: 'column', gap: 12,
       }}>
-        <ThreadBody
-          threads={threads} loading={loading} error={error} endRef={inlineEndRef}
-        />
+        <ThreadBody threads={threads} loading={loading} error={error} />
       </div>
       <InputRow
         text={text} setText={setText} onSend={send}
@@ -292,13 +291,11 @@ export default function BlockThread({ block, onNewQA, onClose }) {
       display: 'flex', flexDirection: 'column',
     }}>
       {header(true)}
-      <div style={{
+      <div ref={overlayScrollRef} style={{
         flex: 1, overflowY: 'auto', padding: 20,
         display: 'flex', flexDirection: 'column', gap: 12,
       }}>
-        <ThreadBody
-          threads={threads} loading={loading} error={error} endRef={overlayEndRef}
-        />
+        <ThreadBody threads={threads} loading={loading} error={error} />
       </div>
       <InputRow
         text={text} setText={setText} onSend={send}

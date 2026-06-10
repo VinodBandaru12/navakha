@@ -14,13 +14,17 @@ db.version(2).stores({
   settings: 'key',
 });
 
+// v3: conversations use string UUID primary keys (old integer-keyed records remain accessible)
+db.version(3).stores({
+  conversations: 'id, title, createdAt, provider, cloudId',
+  messages: '++id, conversationId, parentMessageId, role, timestamp, blockIndex, cloudMsgId',
+  settings: 'key',
+});
+
 // ── Conversations ─────────────────────────────────────────────
 export async function createConversation(title = 'New Chat', provider = 'openai') {
-  const id = await db.conversations.add({
-    title,
-    createdAt: Date.now(),
-    provider,
-  });
+  const id = crypto.randomUUID();
+  await db.conversations.put({ id, title, createdAt: Date.now(), provider });
   return db.conversations.get(id);
 }
 

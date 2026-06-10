@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { Menu, ArrowUp, BookOpen, Lightbulb, HelpCircle, PenLine, ChevronRight } from 'lucide-react';
 import { useConversations } from './hooks/useConversations';
 import { getSetting, updateConversationTitle } from './db/db';
@@ -117,30 +117,35 @@ function WelcomeScreen({ onStart, hasKey, onOpenSettings }) {
 function AppShell() {
   const { session, profile } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const _rawId = searchParams.get('c');
+  const activeConversationId = _rawId ? (Number(_rawId) || _rawId) : null;
+  const activeDocumentId = searchParams.get('d') || null;
+
+  // Mode: URL takes priority over state (d= → document, c= → chat), else state/localStorage
+  const [_activeMode, _setActiveMode] = useState(
+    () => profile?.default_mode === 'docs' ? 'document' : (localStorage.getItem('navakha_mode') || 'chat')
+  );
+  const activeMode = activeDocumentId ? 'document' : activeConversationId ? 'chat' : _activeMode;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
     () => localStorage.getItem('navakha_sidebar_open') === 'false'
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [activeConversationId, setActiveConversationId] = useState(null);
   const [pendingMessage, setPendingMessage] = useState('');
   const [settings, setSettings] = useState({ apiKey: '', provider: 'openai' });
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-  const [activeMode, setActiveMode] = useState(
-    () => profile?.default_mode === 'docs' ? 'document' : (localStorage.getItem('navakha_mode') || 'chat')
-  );
   const [tierModalOpen, setTierModalOpen] = useState(() => {
-    // Show once per browser session for free users
     if (sessionStorage.getItem('navakha_tier_shown')) return false;
     sessionStorage.setItem('navakha_tier_shown', '1');
     return true;
   });
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [activeDocumentId, setActiveDocumentId] = useState(null);
 
   const handleModeChange = (mode) => {
-    setActiveMode(mode);
+    _setActiveMode(mode);
     localStorage.setItem('navakha_mode', mode);
     localStorage.setItem('navakha_last_mode', mode);
     if (isMobile) setSidebarOpen(false);
@@ -166,29 +171,36 @@ function AppShell() {
     return () => window.removeEventListener('resize', fn);
   }, []);
 
+  const setConv = (id) => {
+    navigate(id ? `/app?c=${id}` : '/app', { replace: true });
+  };
+
   const handleSelectConversation = (id) => {
-    setActiveConversationId(id);
+    setConv(id);
     setPendingMessage('');
     if (isMobile) setSidebarOpen(false);
   };
 
   const handleNewChat = async () => {
     const conv = await createNew(settings.provider);
-    setActiveConversationId(conv.id);
+    setConv(conv.id);
     setPendingMessage('');
     if (isMobile) setSidebarOpen(false);
   };
 
   const handleStart = async (message) => {
     const conv = await createNew(settings.provider);
-    setActiveConversationId(conv.id);
+    setConv(conv.id);
     setPendingMessage(message);
     if (isMobile) setSidebarOpen(false);
   };
 
   const handleDeleteConversation = async (id) => {
     await remove(id);
-    if (activeConversationId === id) { setActiveConversationId(null); setPendingMessage(''); }
+    if (activeConversationId === id) {
+      setConv(null);
+      setPendingMessage('');
+    }
   };
 
   const handleTitleGenerated = useCallback(async (title) => {
@@ -199,7 +211,7 @@ function AppShell() {
 
   const handleClearAll = async () => {
     await clearAll();
-    setActiveConversationId(null);
+    setConv(null);
     setPendingMessage('');
   };
 
@@ -209,8 +221,13 @@ function AppShell() {
   const handleLandingSelectChat = async () => {
     localStorage.setItem('navakha_last_mode', 'chat');
     const conv = await createNew(settings.provider);
-    setActiveConversationId(conv.id);
+    setConv(conv.id);
     setPendingMessage('');
+  };
+
+  const handleSelectDocument = (id) => {
+    navigate(id ? `/app?d=${id}` : '/app', { replace: true });
+    if (isMobile) setSidebarOpen(false);
   };
 
   const handleLandingSelectDocs = () => { handleModeChange('document'); };
@@ -253,7 +270,7 @@ function AppShell() {
           activeMode={activeMode}
           onModeChange={handleModeChange}
           activeDocumentId={activeDocumentId}
-          onSelectDocument={setActiveDocumentId}
+          onSelectDocument={handleSelectDocument}
         />
       </div>
 
@@ -295,21 +312,6 @@ function AppShell() {
               {activeConv?.title || 'Navakha'}
             </span>
           </div>
-          <button
-            onClick={() => navigate('/')}
-            title="Back to home"
-            style={{
-              display: 'flex', alignItems: 'center', gap: 5,
-              padding: '5px 12px', background: 'none',
-              border: '1px solid rgba(0,0,0,0.12)', borderRadius: 7,
-              color: '#64748b', fontSize: 12, fontWeight: 500,
-              cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.15s',
-            }}
-            onMouseOver={e => { e.currentTarget.style.borderColor = '#185FA5'; e.currentTarget.style.color = '#185FA5' }}
-            onMouseOut={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.12)'; e.currentTarget.style.color = '#64748b' }}
-          >
-            ← Home
-          </button>
         </div>
 
         {activeMode === 'document' ? (

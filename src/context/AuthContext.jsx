@@ -9,9 +9,19 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
-  // Synchronous check: implicit flow puts type=recovery in the URL hash before any async resolves
+
+  // Captured at mount before supabase-js cleans the URL
+  // PKCE flow uses ?code=  |  implicit flow uses #type=recovery
+  const isRecoveryUrl = useRef(
+    window.location.hash.includes('type=recovery') ||
+    window.location.search.includes('code=')
+  )
   const recoveryActive = useRef(window.location.hash.includes('type=recovery'))
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(recoveryActive.current)
+
+  // Block navigation until onAuthStateChange tells us the actual event type.
+  // For non-recovery URLs this is true immediately so normal flows are unaffected.
+  const [authReady, setAuthReady] = useState(!isRecoveryUrl.current)
 
   const refreshProfile = async (userId) => {
     try {
@@ -36,23 +46,32 @@ export function AuthProvider({ children }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, s) => {
+        // For recovery URL flows skip INITIAL_SESSION — wait for PASSWORD_RECOVERY
+        if (_event === 'INITIAL_SESSION' && isRecoveryUrl.current) return
+
         if (_event === 'PASSWORD_RECOVERY') {
           recoveryActive.current = true
           setIsPasswordRecovery(true)
           setSession(s)
           setUser(s?.user ?? null)
+          setAuthReady(true)
           return
         }
-        // SIGNED_IN fires immediately after PASSWORD_RECOVERY — don't reset recovery mode
+
+        // SIGNED_IN fires immediately after PASSWORD_RECOVERY — suppress it
         if (_event === 'SIGNED_IN' && recoveryActive.current) {
           setSession(s)
           setUser(s?.user ?? null)
+          setAuthReady(true)
           return
         }
+
         recoveryActive.current = false
         setIsPasswordRecovery(false)
         setSession(s)
         setUser(s?.user ?? null)
+        setAuthReady(true)
+
         if (s?.user) {
           if (_event === 'SIGNED_IN') {
             try {
@@ -87,6 +106,7 @@ export function AuthProvider({ children }) {
       session,
       loading,
       isPasswordRecovery,
+      authReady,
       signOut: handleSignOut,
       refreshProfile: () => user && refreshProfile(user.id),
     }}>

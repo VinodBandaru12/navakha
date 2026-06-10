@@ -1,20 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { supabase } from '../../lib/supabase'
 
 export default function AccountModal({ onClose }) {
-  const { user, profile, refreshProfile } = useAuth()
+  const { user, profile, refreshProfile, signOut } = useAuth()
+  const navigate = useNavigate()
   const [name, setName] = useState(profile?.name || '')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
+  const [deleteStep, setDeleteStep] = useState(0) // 0=hidden, 1=confirm, 2=deleting
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      await supabase
-        .from('profiles')
-        .update({ name: name.trim() })
-        .eq('id', user.id)
+      await supabase.from('profiles').update({ name: name.trim() }).eq('id', user.id)
       await refreshProfile()
       setToast('Saved!')
       setTimeout(() => setToast(''), 2500)
@@ -23,6 +23,20 @@ export default function AccountModal({ onClose }) {
       setTimeout(() => setToast(''), 2500)
     } finally {
       setSaving(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    setDeleteStep(2)
+    try {
+      // Records email to prevent free-tier re-registration, then deletes all data
+      await supabase.rpc('delete_account')
+      await signOut()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setDeleteStep(1)
+      setToast('Failed to delete account. Please contact support@navakha.in')
+      setTimeout(() => setToast(''), 5000)
     }
   }
 
@@ -45,6 +59,13 @@ export default function AccountModal({ onClose }) {
             style={{ ...inputStyle, opacity: 0.5, cursor: 'not-allowed' }}
           />
         </Field>
+        {(profile?.created_at || user?.created_at) && (
+          <Field label="Member since">
+            <p style={{ fontSize: 14, color: '#94a3b8', margin: 0 }}>
+              {new Date(profile?.created_at || user?.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </Field>
+        )}
         {toast && (
           <p style={{ fontSize: 13, color: toast.includes('Failed') ? '#f87171' : '#4ade80', marginBottom: 4 }}>
             {toast}
@@ -59,6 +80,65 @@ export default function AccountModal({ onClose }) {
         >
           {saving ? 'Saving…' : 'Save changes'}
         </button>
+
+        {/* Delete account section */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 16, marginTop: 4 }}>
+          {deleteStep === 0 && (
+            <button
+              onClick={() => setDeleteStep(1)}
+              style={{
+                background: 'none', border: '1px solid rgba(248,113,113,0.3)',
+                borderRadius: 8, color: '#f87171', fontSize: 13,
+                padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', width: '100%',
+                transition: 'all 0.15s',
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(248,113,113,0.08)'; e.currentTarget.style.borderColor = '#f87171' }}
+              onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(248,113,113,0.3)' }}
+            >
+              Delete account
+            </button>
+          )}
+
+          {deleteStep === 1 && (
+            <div style={{
+              background: 'rgba(248,113,113,0.06)', border: '1px solid rgba(248,113,113,0.25)',
+              borderRadius: 10, padding: '14px 16px',
+            }}>
+              <p style={{ fontSize: 13, color: '#fca5a5', marginBottom: 6, fontWeight: 600 }}>
+                Are you sure you want to delete your account?
+              </p>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 14, lineHeight: 1.6 }}>
+                All your chats and documents will be permanently deleted. Your email will be retained in our records — you will not be able to create a new free account with the same email.
+              </p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  onClick={handleDeleteAccount}
+                  style={{
+                    flex: 1, padding: '9px 0', borderRadius: 8, border: 'none',
+                    background: '#ef4444', color: 'white',
+                    fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Yes, delete my account
+                </button>
+                <button
+                  onClick={() => setDeleteStep(0)}
+                  style={{
+                    padding: '9px 14px', borderRadius: 8,
+                    border: '1px solid rgba(255,255,255,0.1)', background: 'none',
+                    color: '#94a3b8', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {deleteStep === 2 && (
+            <p style={{ fontSize: 13, color: '#94a3b8', textAlign: 'center' }}>Deleting account…</p>
+          )}
+        </div>
       </ModalCard>
     </Overlay>
   )

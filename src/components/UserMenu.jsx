@@ -73,7 +73,7 @@ export default function UserMenu() {
           </div>
           <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
             <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--sidebar-text-bright)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {profile?.name || 'User'}
+              {profile?.name || profile?.email?.split('@')[0] || 'User'}
             </div>
             <div style={{ fontSize: 11, color: 'var(--sidebar-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {profile?.plan ? profile.plan.charAt(0).toUpperCase() + profile.plan.slice(1) + ' plan' : 'Free plan'}
@@ -99,7 +99,7 @@ export default function UserMenu() {
             {/* Profile info */}
             <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: '#f1f5f9' }}>
-                {profile?.name || 'User'}
+                {profile?.name || profile?.email?.split('@')[0] || 'User'}
               </div>
               <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
                 {profile?.email || ''}

@@ -208,15 +208,16 @@ export default function AuthPage() {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
 
   const navigate = useNavigate()
-  const { session, profile, isPasswordRecovery } = useAuth()
+  const { session, profile, isPasswordRecovery, authReady } = useAuth()
 
   useEffect(() => {
+    if (!authReady) return // wait until auth event type is known (prevents PKCE race)
     if (isPasswordRecovery) return // stay on page to let user set new password
     if (session) {
       if (profile && !profile.onboarded) navigate('/onboarding', { replace: true })
       else navigate('/app', { replace: true })
     }
-  }, [session, profile, isPasswordRecovery, navigate])
+  }, [session, profile, isPasswordRecovery, authReady, navigate])
 
   // Resend countdown
   useEffect(() => {

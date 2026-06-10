@@ -62,11 +62,12 @@ export default function DocSubChat({ documentId, blocks }) {
   // Cached summary for rolling window (in-session only — not persisted)
   const summaryRef = useRef(null); // { text, summarizedCount }
 
-  const bottomRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = scrollContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages, loading]);
 
   const getDocText = (q) => {
@@ -185,7 +186,7 @@ export default function DocSubChat({ documentId, blocks }) {
       )}
 
       {showPanel && (
-        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', position: 'relative' }}>
+        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: 'auto', padding: '16px', position: 'relative' }}>
           <div style={{
             maxWidth: 760, margin: '0 auto',
             display: 'flex', flexDirection: 'column', gap: 12,
@@ -211,8 +212,6 @@ export default function DocSubChat({ documentId, blocks }) {
                 {error}
               </div>
             )}
-
-            <div ref={bottomRef} />
           </div>
         </div>
       )}

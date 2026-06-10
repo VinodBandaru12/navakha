@@ -883,20 +883,15 @@ export default function LandingPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <NavakhaLogo size={24} />
           <span style={{ fontSize: 14, fontWeight: 600, color: TEXT }}>Navakha</span>
-          <span style={{ fontSize: 13, color: MUTED, marginLeft: 8 }}>© 2025 Navakha. All rights reserved.</span>
+          <span style={{ fontSize: 13, color: MUTED, marginLeft: 8 }}>© 2026 Navakha. All rights reserved.</span>
         </div>
         <div style={{ fontSize: 13, color: MUTED, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
           <span onClick={() => setShowTerms(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }} onMouseOver={(e) => e.currentTarget.style.color = TEXT} onMouseOut={(e) => e.currentTarget.style.color = MUTED}>Terms of Service</span>
           <span>·</span>
           <span onClick={() => setShowPrivacy(true)} style={{ cursor: 'pointer', textDecoration: 'underline' }} onMouseOver={(e) => e.currentTarget.style.color = TEXT} onMouseOut={(e) => e.currentTarget.style.color = MUTED}>Privacy Policy</span>
-          <span>·</span>
-          <span onClick={goLogin} style={{ cursor: 'pointer' }} onMouseOver={(e) => e.currentTarget.style.color = TEAL} onMouseOut={(e) => e.currentTarget.style.color = MUTED}>Log in</span>
-          <span>·</span>
-          <span onClick={goSignup} style={{ cursor: 'pointer', color: TEAL, fontWeight: 600 }}>Sign up free →</span>
         </div>
       </footer>
 
-      <BackToTop />
 
       {showTerms && <PolicyModal title="Terms of Service" onClose={() => setShowTerms(false)} content={TERMS} />}
       {showPrivacy && <PolicyModal title="Privacy Policy" onClose={() => setShowPrivacy(false)} content={PRIVACY} />}

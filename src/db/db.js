@@ -61,12 +61,10 @@ export async function addMessage({ conversationId, role, content, parentMessageI
 }
 
 export async function getMessages(conversationId) {
-  const all = await db.messages
+  return db.messages
     .where('conversationId')
     .equals(conversationId)
     .sortBy('timestamp');
-  // Only return main thread messages — subchat messages have a parentMessageId set
-  return all.filter(m => !m.parentMessageId);
 }
 
 export async function updateMessageContent(id, content) {

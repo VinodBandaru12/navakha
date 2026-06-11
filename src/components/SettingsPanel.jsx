@@ -75,7 +75,7 @@ export default function SettingsPanel({
             <label className="block text-sm font-medium text-slate-700 mb-2">AI Provider</label>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { value: 'openai', label: 'OpenAI', sub: 'GPT-4o' },
+                { value: 'openai', label: 'OpenAI', sub: 'GPT' },
                 { value: 'anthropic', label: 'Anthropic', sub: 'Claude Sonnet 4' },
               ].map((p) => (
                 <button

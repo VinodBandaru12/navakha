@@ -865,7 +865,7 @@ export default function LandingPage() {
           Learn anything.<br />Understand everything.
         </h1>
         <p style={{ fontSize: 'clamp(15px, 1.8vw, 18px)', color: MUTED, maxWidth: 480, lineHeight: 1.6, marginBottom: 28 }}>
-          An AI tutor that reads your documents and answers your questions — powered by Claude and GPT-4.
+          An AI tutor that reads your documents and answers your questions — powered by Claude and GPT.
         </p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 14 }}>
           <button onClick={goSignup} style={{ padding: '12px 28px', background: TEAL, border: 'none', borderRadius: 10, color: 'white', fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'background 0.15s' }}
@@ -882,7 +882,7 @@ export default function LandingPage() {
         </div>
         <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginBottom: 32 }}>Free to start · No credit card required</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 560 }}>
-          <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT-4." onClick={() => navigate('/auth')} />
+          <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT." onClick={() => navigate('/auth')} />
           <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section — or the whole document." onClick={() => navigate('/auth')} />
           <FeatureCard Icon={BrainIcon} title="Smart replies" body="Every response has ↩ reply buttons. Ask about any specific part without scrolling or starting over." onClick={() => navigate('/auth')} />
         </div>
@@ -924,7 +924,7 @@ const TERMS = `Terms of Service — Last updated: June 2026
 By using Navakha you agree to these Terms. If you disagree, do not use the Service.
 
 2. Description of Service
-Navakha is an AI tutoring platform. It uses Anthropic Claude and OpenAI GPT-4 to answer educational questions and analyse documents.
+Navakha is an AI tutoring platform. It uses Anthropic Claude and OpenAI GPT to answer educational questions and analyse documents.
 
 3. User Accounts
 Provide accurate information when signing up. Keep your password secure. You are responsible for all activity under your account.

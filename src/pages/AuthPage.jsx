@@ -575,7 +575,7 @@ Last updated: June 2026
 By creating an account and using Navakha ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, please do not use the Service.
 
 2. Description of Service
-Navakha is an AI-powered tutoring platform that allows users to ask educational questions and receive AI-generated answers. The Service uses third-party AI providers (Anthropic Claude, OpenAI GPT-4).
+Navakha is an AI-powered tutoring platform that allows users to ask educational questions and receive AI-generated answers. The Service uses third-party AI providers (Anthropic Claude, OpenAI GPT).
 
 3. User Accounts
 You must provide accurate information when creating an account. You are responsible for maintaining the confidentiality of your password and for all activities under your account. You must notify us immediately of any unauthorized use.
@@ -629,7 +629,7 @@ Last updated: June 2026
 Your data is stored securely in Supabase (PostgreSQL) with Row-Level Security enabled.
 
 4. Third-Party AI Providers
-Your messages are sent to Anthropic (Claude) and/or OpenAI (GPT-4) to generate responses. We do not share your personal identity with AI providers — only the content of messages.
+Your messages are sent to Anthropic (Claude) and/or OpenAI (GPT) to generate responses. We do not share your personal identity with AI providers — only the content of messages.
 
 5. Data Retention
 Your conversations and documents are retained until you delete them or your account.

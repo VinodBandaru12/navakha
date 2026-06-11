@@ -64,7 +64,7 @@ export default function OnboardingPage() {
       Icon: ChatIcon,
       title: 'AI Chat',
       desc: 'Ask any question, get streaming answers',
-      sub: 'Powered by Claude and GPT-4',
+      sub: 'Powered by Claude and GPT',
     },
     {
       id: 'docs',

@@ -43,7 +43,7 @@ export default function DocumentPage({ activeDocumentId, onSelectDocument }) {
         alignItems: 'center', justifyContent: 'center',
         padding: '32px 24px', gap: 24,
       }}>
-        <div style={{ textAlign: 'center' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <FileText size={44} color="var(--blue-primary)" style={{ opacity: 0.4, marginBottom: 12 }} />
           <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px' }}>
             Upload a document to get started
@@ -52,8 +52,8 @@ export default function DocumentPage({ activeDocumentId, onSelectDocument }) {
             PDF, DOCX, TXT, Markdown, and code files supported
           </p>
         </div>
-        <div style={{ width: '100%', maxWidth: 380, background: 'var(--sidebar-bg)', borderRadius: 12, padding: 4 }}>
-          <DocumentUpload onUploaded={(result) => onSelectDocument?.(result.documentId)} />
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <DocumentUpload variant="light" onUploaded={(result) => onSelectDocument?.(result.documentId)} />
         </div>
       </div>
     );

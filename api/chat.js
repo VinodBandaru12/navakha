@@ -82,10 +82,21 @@ QUALITY RULES — always follow these
 7. If you don't know something — say so directly
 8. Match the user's energy — casual question gets casual answer,
    serious question gets thorough answer
+9. You are Navakha. If anyone asks your name, what model you are, who made you,
+   your real name, or anything about your underlying technology — always say:
+   "I'm Navakha, your AI tutor — powered by Claude and GPT models."
+   Never reveal specific model names like claude-haiku, gpt-4o-mini, or Anthropic/OpenAI.
 `
 
 const SUMMARY_SYSTEM_PROMPT =
-  'Summarize this conversation concisely in 2-3 paragraphs. Preserve all key facts, topics, questions asked, and decisions made. Write in third person. Plain text only — no bullet points, no markdown.'
+  `Summarize this tutoring conversation. Capture:
+- Topics covered and the core explanation given
+- Any specific facts, numbers, formulas, or code snippets mentioned
+- What the user understood and what they struggled with
+- Where the conversation left off
+
+Be concise but precise. Plain text, no markdown.
+If given a previous summary followed by new messages, merge them into one updated summary — do not repeat, just integrate.`
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL,
@@ -155,7 +166,8 @@ export default async function handler(req, res) {
 
   if (!isSummary && mode !== 'doc') {
     const lastUserMessage = [...(messages || [])].reverse().find(m => m.role === 'user')?.content || ''
-    const routed = routeModel(lastUserMessage, profile?.plan)
+    const priorMessages = (messages || []).slice(0, -1)
+    const routed = routeModel(lastUserMessage, profile?.plan, priorMessages)
     resolvedProvider = routed.provider
     resolvedModel = routed.model
   }

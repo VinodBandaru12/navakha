@@ -5,7 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 
 const ACCEPTED = '.pdf,.docx,.txt,.md,.html,.css,.xml,.xlsx,.js,.ts,.jsx,.tsx,.py,.java,.cpp,.c,.cs,.go,.rb,.rs';
 
-export default function DocumentUpload({ onUploaded }) {
+export default function DocumentUpload({ onUploaded, variant = 'dark' }) {
+  const isLight = variant === 'light';
   const { session, profile, user } = useAuth();
   const isPaying = !!(profile?.plan && profile.plan !== 'free');
 
@@ -51,12 +52,12 @@ export default function DocumentUpload({ onUploaded }) {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         style={{
-          border: `2px dashed ${dragging ? 'var(--blue-primary)' : 'rgba(255,255,255,0.15)'}`,
+          border: `2px dashed ${dragging ? 'var(--blue-primary)' : isLight ? 'var(--input-border)' : 'rgba(255,255,255,0.15)'}`,
           borderRadius: 'var(--radius-md)',
           padding: '14px 12px',
-          textAlign: 'center',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           cursor: uploading ? 'wait' : 'pointer',
-          background: dragging ? 'rgba(24,95,165,0.1)' : 'rgba(255,255,255,0.03)',
+          background: dragging ? 'rgba(24,95,165,0.08)' : isLight ? 'var(--main-bg)' : 'rgba(255,255,255,0.03)',
           transition: 'all 0.15s ease',
         }}
       >
@@ -67,15 +68,15 @@ export default function DocumentUpload({ onUploaded }) {
               <span className="typing-dot" />
               <span className="typing-dot" />
             </div>
-            <span style={{ fontSize: 11, color: 'var(--sidebar-text)' }}>{progress}</span>
+            <span style={{ fontSize: 11, color: isLight ? 'var(--text-secondary)' : 'var(--sidebar-text)' }}>{progress}</span>
           </div>
         ) : (
           <>
-            <Upload size={16} style={{ color: 'var(--sidebar-text)', marginBottom: 4 }} />
-            <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--sidebar-text-bright)', margin: 0 }}>
+            <Upload size={16} style={{ color: isLight ? 'var(--text-secondary)' : 'var(--sidebar-text)', marginBottom: 4 }} />
+            <p style={{ fontSize: 12, fontWeight: 500, color: isLight ? 'var(--text-primary)' : 'var(--sidebar-text-bright)', margin: 0 }}>
               Upload document
             </p>
-            <p style={{ fontSize: 11, color: 'var(--sidebar-text)', marginTop: 2, marginBottom: 0 }}>
+            <p style={{ fontSize: 11, color: isLight ? 'var(--text-secondary)' : 'var(--sidebar-text)', marginTop: 2, marginBottom: 0 }}>
               {isPaying
                 ? 'PDF, DOCX, TXT, MD, code… (up to 100 MB)'
                 : 'PDF, DOCX, TXT, MD, code…'}

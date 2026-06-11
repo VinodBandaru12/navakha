@@ -31,7 +31,7 @@ function MiniAIMsg({ content }) {
       }}>N</div>
       <div style={{
         flex: 1, minWidth: 0, fontSize: 14, color: '#0f172a', lineHeight: 1.5,
-        background: 'var(--bubble-ai-bg, #f1f5f9)', border: '1px solid #e2e8f0',
+        background: '#cbd5e1', border: '1px solid #94a3b8',
         padding: '8px 14px', borderRadius: '4px 16px 16px 16px', maxWidth: '80%',
       }}>
         <VisualRenderer text={content} />
@@ -51,7 +51,7 @@ function MiniStreamingMsg({ content }) {
       }}>N</div>
       <div style={{
         flex: 1, minWidth: 0, fontSize: 14, color: '#0f172a', lineHeight: 1.5,
-        background: 'var(--bubble-ai-bg, #f1f5f9)', border: '1px solid #e2e8f0',
+        background: '#cbd5e1', border: '1px solid #94a3b8',
         padding: '8px 14px', borderRadius: '4px 16px 16px 16px', maxWidth: '80%',
       }}>
         {content}

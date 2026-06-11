@@ -15,38 +15,18 @@ const COMPLEX_RE = /\b(derive|prove mathematically|implement from scratch|system
 
 // ── Route by plan ─────────────────────────────────────────────────────────────
 //
-//  free     : simple(≤12w) → mini  |  rest → haiku  |  never sonnet
-//  own_key  : simple(≤5w)  → mini  |  rest → haiku  |  super-complex → sonnet
-//  pro      : simple(≤8w)  → mini  |  medium → haiku |  complex → sonnet
+//  free     : always haiku
+//  pro      : haiku  |  complex → sonnet
+//  own_key  : haiku  |  complex → sonnet
+//  summary  : always gpt-4o-mini (handled in chat.js via isSummary flag)
 
 export function routeModel(lastMessage, plan) {
-  const lower      = lastMessage.trim().toLowerCase()
-  const wordCount  = lower.split(/\s+/).filter(Boolean).length
-  const isGreeting = GREETING_RE.test(lower)
-  const isComplex  = wordCount > 100 || COMPLEX_RE.test(lastMessage)
+  const isComplex = lastMessage.length > 500 || COMPLEX_RE.test(lastMessage)
 
-  if (plan === 'free') {
-    const isSimple = wordCount <= 12 || isGreeting
-    return isSimple
-      ? { provider: 'openai',     model: 'gpt-4o-mini' }
-      : { provider: 'anthropic',  model: 'claude-haiku-4-5-20251001' }
+  if (plan === 'pro' || plan === 'own_key') {
+    if (isComplex) return { provider: 'anthropic', model: 'claude-sonnet-4-6' }
   }
 
-  if (plan === 'pro') {
-    const isSimple = wordCount <= 8 || isGreeting
-    if (isSimple)   return { provider: 'openai',    model: 'gpt-4o-mini' }
-    if (isComplex)  return { provider: 'anthropic', model: 'claude-sonnet-4-6' }
-                    return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }
-  }
-
-  if (plan === 'own_key') {
-    const isSimple = wordCount <= 5 || isGreeting
-    if (isSimple)   return { provider: 'openai',    model: 'gpt-4o-mini' }
-    if (isComplex)  return { provider: 'anthropic', model: 'claude-sonnet-4-6' }
-                    return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }
-  }
-
-  // unknown plan — safe default
   return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }
 }
 
@@ -56,21 +36,8 @@ export function routeModel(lastMessage, plan) {
 export function isOffTopic(newMessage, priorMessages) {
   if (!priorMessages || priorMessages.length === 0) return false
 
-  // Explicit topic-shift phrases the user typed
-  if (/\b(different (question|topic)|by the way|unrelated to|new question|forget (that|it)|on another note|switching topics|change of subject|random question|completely different|nothing to do with)\b/i.test(newMessage)) {
-    return true
-  }
-
-  const contextText = priorMessages.slice(-6).map(m => m.content).join(' ')
-
-  const meaningful = str =>
-    (str.toLowerCase().match(/\b[a-z]{4,}\b/g) || []).filter(w => !STOP_WORDS.has(w))
-
-  const newWords  = new Set(meaningful(newMessage))
-  const ctxWords  = new Set(meaningful(contextText))
-
-  if (newWords.size === 0 || ctxWords.size === 0) return false
-
-  const overlap = [...newWords].filter(w => ctxWords.has(w)).length
-  return (overlap / newWords.size) < 0.1
+  // Only strip history when the user explicitly signals a topic change.
+  // Keyword-overlap heuristics are unreliable: follow-up instructions like
+  // "build svg visuals" or "show me a design" share no words with their topic.
+  return /\b(different (question|topic)|unrelated to|new question|forget (that|it)|on another note|switching topics|change of subject|random question|completely different|nothing to do with)\b/i.test(newMessage)
 }

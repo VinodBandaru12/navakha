@@ -84,7 +84,9 @@ export function useChat({ conversationId, provider, apiKey, accessToken, onTitle
       const summarizedCount = conv?.summarizedCount ?? 0;
 
       if (!summary || summarizedCount < toSummarize.length) {
-        summary = await summarizeHistory(toSummarize, { accessToken, provider });
+        // Incremental: only send the new batch + existing summary, not all raw messages
+        const newBatch = summary ? toSummarize.slice(summarizedCount) : toSummarize;
+        summary = await summarizeHistory(newBatch, { accessToken, provider, existingSummary: summary });
         if (summary) {
           await updateConversationSummary(conversationId, summary, toSummarize.length);
         }

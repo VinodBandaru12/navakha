@@ -19,7 +19,7 @@ export default function DocumentSidebar({ activeDocumentId, onSelectDocument }) 
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, [isPaying, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { reload(); }, [isPaying, user?.id, activeDocumentId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleUploaded = (result) => {
     reload();

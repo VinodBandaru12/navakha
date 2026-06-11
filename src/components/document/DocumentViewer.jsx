@@ -1,6 +1,6 @@
 import DocumentBlock from './DocumentBlock';
 
-export default function DocumentViewer({ blocks, onThreadAdded, onEditBlock }) {
+export default function DocumentViewer({ blocks, onThreadAdded }) {
   if (!blocks.length) {
     return (
       <div style={{
@@ -24,7 +24,6 @@ export default function DocumentViewer({ blocks, onThreadAdded, onEditBlock }) {
             key={block.id}
             block={block}
             onNewQA={onThreadAdded}
-            onEditBlock={onEditBlock}
           />
         ))}
         <div style={{ height: 32 }} />

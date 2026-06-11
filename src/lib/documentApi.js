@@ -6,12 +6,12 @@ import { callAI } from './aiChat';
 import { supabase } from './supabase';
 import {
   docDb,
-  createDocument, updateDocumentBlockCount, setDocumentRenderContent,
+  createDocument, updateDocumentBlockCount,
   getAllDocuments, getDocumentById, removeDocument,
   saveBlocks, getBlocksByDocumentId, getBlocksBefore,
   addThread, getThreadsByBlockIds,
 } from '../db/documentDb';
-import { parseFileInBrowser, generateRenderContent, findRelevantBlocks } from './browserChunker';
+import { parseFileInBrowser, findRelevantBlocks } from './browserChunker';
 import {
   cloudFetchDocuments,
   cloudFetchDocument,
@@ -109,9 +109,6 @@ function shapeDocument(doc) {
     size_bytes: doc.sizeBytes ?? doc.size_bytes,
     block_count: doc.blockCount ?? doc.block_count,
     created_at: doc.createdAt ? new Date(doc.createdAt).toISOString() : doc.created_at,
-    // renderHtml / rawFileData only exist for IndexedDB docs
-    renderHtml: doc.renderHtml,
-    rawFileData: doc.rawFileData,
   };
 }
 
@@ -143,10 +140,7 @@ async function uploadLocalDocument(file, authOpts = {}) {
     throw new Error('Free plan allows 2 documents. Upgrade to upload more.');
   }
 
-  const [rawBlocks, renderContent] = await Promise.all([
-    parseFileInBrowser(file),
-    generateRenderContent(file),
-  ]);
+  const rawBlocks = await parseFileInBrowser(file);
 
   const doc = await createDocument({
     filename: file.name,
@@ -166,10 +160,7 @@ async function uploadLocalDocument(file, authOpts = {}) {
     embedding: embeddings[i] ?? null,
   }));
 
-  const [blocks] = await Promise.all([
-    saveBlocks(doc.id, blocksWithEmbeddings),
-    renderContent ? setDocumentRenderContent(doc.id, renderContent) : Promise.resolve(),
-  ]);
+  const blocks = await saveBlocks(doc.id, blocksWithEmbeddings);
   await updateDocumentBlockCount(doc.id, blocks.length);
 
   return {
@@ -210,11 +201,8 @@ async function uploadCloudDocument(file, accessToken) {
     throw new Error('File upload to storage failed');
   }
 
-  // ── Step 3: Parse blocks in the browser (reuse existing chunker) ──────────────
-  const [rawBlocks, renderContent] = await Promise.all([
-    parseFileInBrowser(file),
-    generateRenderContent(file),
-  ]);
+  // ── Step 3: Parse blocks in the browser ──────────────────────────────────────
+  const rawBlocks = await parseFileInBrowser(file);
 
   // ── Step 4: Send blocks to server for embedding + Supabase save ───────────────
   const processRes = await fetch('/api/doc-process', {
@@ -235,21 +223,6 @@ async function uploadCloudDocument(file, accessToken) {
   }
 
   const { blockCount } = await processRes.json();
-
-  // ── Step 5: Also cache the visual render in IndexedDB for this device ─────────
-  if (renderContent) {
-    // Store render under a key that links to the cloud document ID
-    try {
-      const doc = await createDocument({
-        filename: file.name,
-        filetype: file.name.split('.').pop().toLowerCase(),
-        sizeBytes: file.size,
-      });
-      await setDocumentRenderContent(doc.id, renderContent);
-      // Tag local record so we know it mirrors the cloud doc
-      await docDb.documents.update(doc.id, { cloudId: documentId });
-    } catch { /* visual cache is non-critical */ }
-  }
 
   return {
     documentId,

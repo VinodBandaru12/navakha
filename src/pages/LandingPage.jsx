@@ -140,9 +140,19 @@ function SectionHeading({ title, sub }) {
   )
 }
 
-function FeatureCard({ Icon, title, body, cardStyle = {} }) {
+function FeatureCard({ Icon, title, body, cardStyle = {}, onClick }) {
   return (
-    <div style={{ background: CARD_BG, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12, padding: '20px 18px', minWidth: 0, ...cardStyle }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: CARD_BG, border: '1px solid rgba(255,255,255,0.14)', borderRadius: 12,
+        padding: '20px 18px', minWidth: 0, cursor: onClick ? 'pointer' : 'default',
+        transition: 'border-color 0.15s, transform 0.1s',
+        ...cardStyle,
+      }}
+      onMouseOver={(e) => { if (onClick) { e.currentTarget.style.borderColor = TEAL; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+      onMouseOut={(e) => { if (onClick) { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.transform = 'none'; } }}
+    >
       <div style={{ marginBottom: 10 }}><Icon /></div>
       <h3 style={{ fontSize: 'clamp(14px, 1.8vw, 16px)', fontWeight: 600, color: TEXT, marginBottom: 8 }}>{title}</h3>
       <p style={{ fontSize: 'clamp(12px, 1.3vw, 14px)', color: MUTED, lineHeight: 1.6, margin: 0 }}>{body}</p>
@@ -872,9 +882,9 @@ export default function LandingPage() {
         </div>
         <p style={{ fontSize: 13, color: 'rgba(148,163,184,0.6)', marginBottom: 32 }}>Free to start · No credit card required</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 560 }}>
-          <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT-4." />
-          <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section — or the whole document." />
-          <FeatureCard Icon={BrainIcon} title="Smart replies" body="Every response has ↩ reply buttons. Ask about any specific part without scrolling or starting over." />
+          <FeatureCard Icon={ChatBubbleIcon} title="AI Chat" body="Ask any question. Get clear, structured answers with interactive widgets, charts, and code from Claude and GPT-4." onClick={() => navigate('/auth')} />
+          <FeatureCard Icon={DocumentIcon} title="Document Chat" body="Upload your textbook, research paper, or notes. Ask questions about any section — or the whole document." onClick={() => navigate('/auth')} />
+          <FeatureCard Icon={BrainIcon} title="Smart replies" body="Every response has ↩ reply buttons. Ask about any specific part without scrolling or starting over." onClick={() => navigate('/auth')} />
         </div>
       </section>
 

@@ -107,9 +107,10 @@ export async function addThread({ blockId, question, answer, modelUsed }) {
 
 export async function getThreadsByBlockIds(blockIds) {
   if (!blockIds.length) return {};
-  const threads = await docDb.block_threads
-    .where('blockId').anyOf(blockIds)
-    .sortBy('createdAt');
+  const all = await docDb.block_threads.toArray();
+  const threads = all
+    .filter(t => blockIds.includes(t.blockId))
+    .sort((a, b) => a.createdAt - b.createdAt);
   const map = {};
   for (const t of threads) {
     (map[t.blockId] ??= []).push(t);

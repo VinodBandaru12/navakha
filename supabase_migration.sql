@@ -33,16 +33,15 @@ END $$;
 
 -- ── 3. block_threads table ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS block_threads (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  block_id    uuid REFERENCES blocks(id) ON DELETE CASCADE,
-  document_id uuid,
-  user_id     uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  question    text NOT NULL,
-  answer      text NOT NULL,
-  model_used  text,
-  created_at  timestamptz DEFAULT now()
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  block_id   uuid REFERENCES blocks(id) ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  question   text NOT NULL,
+  answer     text NOT NULL,
+  model_used text,
+  created_at timestamptz DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS block_threads_doc_idx ON block_threads (document_id);
+CREATE INDEX IF NOT EXISTS block_threads_block_idx ON block_threads (block_id);
 ALTER TABLE block_threads ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='block_threads' AND policyname='block_threads: own rows') THEN

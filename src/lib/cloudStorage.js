@@ -130,16 +130,15 @@ export async function cloudDeleteDocument(documentId, userId) {
 
 // ── Block threads (for cloud documents) ──────────────────────────────────────
 
-export async function cloudSaveBlockThread(blockId, documentId, userId, question, answer, modelUsed) {
+export async function cloudSaveBlockThread(blockId, userId, question, answer, modelUsed) {
   const { data, error } = await supabase
     .from('block_threads')
     .insert({
-      block_id:    blockId,
-      document_id: documentId,
-      user_id:     userId,
+      block_id:   blockId,
+      user_id:    userId,
       question,
       answer,
-      model_used:  modelUsed,
+      model_used: modelUsed,
     })
     .select('id')
     .single()

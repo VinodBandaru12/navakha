@@ -6,12 +6,19 @@ export default function DocumentViewer({ blocks, onThreadAdded }) {
       <div style={{
         flex: 1,
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: 'var(--text-muted)',
-        fontSize: 14,
+        padding: '32px 24px',
+        textAlign: 'center',
+        gap: 8,
       }}>
-        This document has no readable blocks.
+        <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+          No readable text found
+        </p>
+        <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0, maxWidth: 360 }}>
+          This appears to be an image-based or scanned PDF. Please upload a text-based PDF or a different format (DOCX, TXT, Markdown).
+        </p>
       </div>
     );
   }

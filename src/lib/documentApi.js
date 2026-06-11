@@ -370,9 +370,9 @@ If the question is genuinely unrelated to the document, say so kindly.`;
   let threadId = null;
   if (user) {
     try {
-      threadId = await cloudSaveBlockThread(blockId, blk.document_id, user.id, question, answer, model);
+      threadId = await cloudSaveBlockThread(blockId, user.id, question, answer, model);
     } catch (e) {
-      console.warn('[askCloudBlock] thread save failed:', e.message);
+      console.error('[askCloudBlock] thread save failed:', e.message);
     }
   }
 

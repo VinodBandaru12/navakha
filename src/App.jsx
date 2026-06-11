@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
-import { Menu, ArrowUp, BookOpen, Lightbulb, HelpCircle, PenLine, ChevronRight } from 'lucide-react';
+import { Menu, ArrowUp, ArrowLeft, BookOpen, Lightbulb, HelpCircle, PenLine, ChevronRight } from 'lucide-react';
 import { useConversations } from './hooks/useConversations';
 import { getSetting, updateConversationTitle } from './db/db';
 import Sidebar from './components/Sidebar';
@@ -307,7 +307,15 @@ function AppShell() {
           padding: '0 20px', display: 'flex',
           alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {isMobile && (activeConversationId || activeDocumentId) && (
+              <button onClick={() => navigate('/app', { replace: true })} style={{
+                padding: 6, borderRadius: 8, background: 'none', border: 'none',
+                color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+              }}>
+                <ArrowLeft size={20} />
+              </button>
+            )}
             {isMobile && (
               <button onClick={() => setSidebarOpen(true)} style={{
                 padding: 6, borderRadius: 8, background: 'none', border: 'none',
@@ -326,7 +334,7 @@ function AppShell() {
         </div>
 
         {activeMode === 'document' ? (
-          <DocumentPage activeDocumentId={activeDocumentId} />
+          <DocumentPage activeDocumentId={activeDocumentId} onSelectDocument={handleSelectDocument} />
         ) : activeConversationId ? (
           <ChatWindow
             key={activeConversationId}

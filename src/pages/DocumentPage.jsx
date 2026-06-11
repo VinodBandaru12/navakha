@@ -4,12 +4,13 @@ import { fetchDocument } from '../lib/documentApi';
 import { useAuth } from '../context/AuthContext';
 import DocumentViewer from '../components/document/DocumentViewer';
 import DocSubChat from '../components/document/DocSubChat';
+import DocumentUpload from '../components/document/DocumentUpload';
 
 function enrichBlocks(rawBlocks) {
   return rawBlocks.map(b => ({ ...b }));
 }
 
-export default function DocumentPage({ activeDocumentId }) {
+export default function DocumentPage({ activeDocumentId, onSelectDocument }) {
   const { session } = useAuth();
   const [doc, setDoc] = useState(null);
   const [blocks, setBlocks] = useState([]);
@@ -40,13 +41,20 @@ export default function DocumentPage({ activeDocumentId }) {
       <div style={{
         flex: 1, display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        color: 'var(--text-secondary)', gap: 12,
+        padding: '32px 24px', gap: 24,
       }}>
-        <FileText size={44} style={{ opacity: 0.2 }} />
-        <p style={{ fontSize: 16, fontWeight: 500, color: 'var(--text-primary)', margin: 0 }}>
-          Select a document to start reading
-        </p>
-        <p style={{ fontSize: 14, margin: 0 }}>Upload one from the sidebar to get started</p>
+        <div style={{ textAlign: 'center' }}>
+          <FileText size={44} color="var(--blue-primary)" style={{ opacity: 0.4, marginBottom: 12 }} />
+          <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px' }}>
+            Upload a document to get started
+          </p>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', margin: 0 }}>
+            PDF, DOCX, TXT, Markdown, and code files supported
+          </p>
+        </div>
+        <div style={{ width: '100%', maxWidth: 380, background: 'var(--sidebar-bg)', borderRadius: 12, padding: 4 }}>
+          <DocumentUpload onUploaded={(result) => onSelectDocument?.(result.documentId)} />
+        </div>
       </div>
     );
   }
